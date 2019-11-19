@@ -1,0 +1,62 @@
+image: maven:3.3.9-jdk-8-alpine
+
+variables:
+  MAVEN_CLI_OPTS: "-s .m2/settings.xml --batch-mode"
+  MAVEN_OPTS: "-Dmaven.repo.local=.m2/repository"
+
+cache:
+  paths:
+    - .m2/repository/
+    - target/
+
+before_script:
+  - apk add --update openssh-client bash openssl rsync gettext tzdata
+  - eval $(ssh-agent -s)
+  - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add - > /dev/null
+  - mkdir ~/.ssh
+  - chmod 700 ~/.ssh
+  - ssh-keyscan $DEPLOY_SERVER >> ~/.ssh/known_hosts
+  - chmod 600 ~/.ssh/known_hosts
+
+.buildscript:
+  stage: build
+  script:
+    - mvn $MAVEN_CLI_OPTS compile
+
+deploy_dev:
+  stage: deploy
+  environment: dev
+  script:
+    - export HOSTNAME_BCKUP=$HOSTNAME && export HOSTNAME='${HOSTNAME}'
+    - envsubst < config/.application.yml > config/application.yml
+    - chmod -R 700 config
+    - (rm src/main/resources/application.properties || true)
+    - export HOSTNAME=$HOSTNAME_BCKUP
+    - mvn $MAVEN_CLI_OPTS clean package
+    - cd target && jar_file=`ls *jar` && (ln -s $jar_file $JAR_FILE_LINK || true) && ls -al && cd ..
+    - DEPLOY_DIR=$(date +"%Y%m%d_%H%M%S")
+    - ssh $SERVER_USER@$DEPLOY_SERVER "bash && cd $DEPLOY_PATH && mkdir $DEPLOY_DIR"
+    - rsync -a target/*jar config $SERVER_USER@$DEPLOY_SERVER:$DEPLOY_PATH/$DEPLOY_DIR/
+    - ssh $SERVER_USER@$DEPLOY_SERVER "bash && cd $DEPLOY_PATH && ln -snf $DEPLOY_DIR current && (sh $STOP_SCRIPT || true) && (sh $START_SCRIPT > /dev/null 2>&1 &) && exit"
+    #  only:
+    ##    - master
+  when: manual
+
+deploy_prod:
+  stage: deploy
+  environment: prod
+  script:
+    - export HOSTNAME_BCKUP=$HOSTNAME && export HOSTNAME='${HOSTNAME}'
+    - envsubst < config/.application.yml > config/application.yml
+    - chmod -R 700 config
+    - (rm src/main/resources/application.properties || true)
+    - export HOSTNAME=$HOSTNAME_BCKUP
+    - mvn $MAVEN_CLI_OPTS clean package
+    - cd target && jar_file=`ls *jar` && (ln -s $jar_file $JAR_FILE_LINK || true) && ls -al && cd ..
+    - DEPLOY_DIR=$(date +"%Y%m%d_%H%M%S")
+    - ssh $SERVER_USER@$DEPLOY_SERVER "bash && cd $DEPLOY_PATH && mkdir $DEPLOY_DIR"
+    - rsync -a target/*jar config $SERVER_USER@$DEPLOY_SERVER:$DEPLOY_PATH/$DEPLOY_DIR/
+    - ssh $SERVER_USER@$DEPLOY_SERVER "bash && cd $DEPLOY_PATH && ln -snf $DEPLOY_DIR current && (sh $STOP_SCRIPT || true) && (sh $START_SCRIPT > /dev/null 2>&1 &) && exit"
+    #  only:
+    ##    - master
+  when: manual
