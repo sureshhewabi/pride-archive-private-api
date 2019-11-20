@@ -12,7 +12,6 @@ import uk.ac.ebi.pride.ws.pride.models.dataset.ProjectResource;
 import uk.ac.ebi.pride.ws.pride.transformers.Transformer;
 import uk.ac.ebi.pride.ws.pride.utils.WsContastants;
 
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -33,12 +32,9 @@ public class PrideProjectResourceAssembler extends ResourceAssemblerSupport<Proj
     @Override
     public ProjectResource toResource(Project oracleProject) {
         List<Link> links = new ArrayList<>();
-        Method method = null;
         try {
-            method = ProjectController.class.getMethod("getFilesByProject", String.class, String.class, Integer.class, Integer.class, String.class, String.class);
-            Link link = ControllerLinkBuilder.linkTo(method, oracleProject.getAccession(), "", WsContastants.MAX_PAGINATION_SIZE, 0).withRel(WsContastants.HateoasEnum.files.name());
-            links.add(link);
-        } catch (NoSuchMethodException e) {
+            links.add(ControllerLinkBuilder.linkTo(ControllerLinkBuilder.methodOn(ProjectController.class).getFilesByProject(authentication, oracleProject.getAccession(), 100,0)).withRel(WsContastants.HateoasEnum.files.name()));
+        } catch (Exception e) {
             log.error(e.getMessage(),e);
         }
         return new ProjectResource(Transformer.transformOracleProject(oracleProject), links);

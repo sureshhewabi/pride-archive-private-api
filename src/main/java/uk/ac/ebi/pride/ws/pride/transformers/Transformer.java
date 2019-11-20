@@ -9,10 +9,13 @@ import uk.ac.ebi.pride.archive.dataprovider.reference.Reference;
 import uk.ac.ebi.pride.archive.dataprovider.user.Contact;
 import uk.ac.ebi.pride.archive.dataprovider.user.ContactProvider;
 import uk.ac.ebi.pride.archive.repo.repos.project.Project;
+import uk.ac.ebi.pride.archive.repo.repos.project.ProjectCvParam;
 import uk.ac.ebi.pride.archive.repo.repos.project.ProjectTag;
 import uk.ac.ebi.pride.archive.repo.repos.user.User;
+import uk.ac.ebi.pride.utilities.term.CvTermReference;
 import uk.ac.ebi.pride.utilities.util.StringUtils;
 import uk.ac.ebi.pride.ws.pride.models.dataset.PrideProject;
+import uk.ac.ebi.pride.ws.pride.utils.WsContastants;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -108,6 +111,27 @@ public class Transformer {
         List<String> keywords = oracleProject.getKeywords().stream()
                 .map(Transformer::convertSentenceStyle).collect(Collectors.toList());
 
+        Collection<CvParamProvider> diseases = new ArrayList<>();
+        Collection<CvParamProvider> organisms = new ArrayList<>();
+        Collection<CvParamProvider> organismParts = new ArrayList<>();
+
+
+        if(oracleProject.getSamples() != null && oracleProject.getSamples().size() > 0){
+            for( ProjectCvParam param: oracleProject.getSamples()){
+                if(param.getCvParam() != null){
+
+                    CvParam value = new CvParam(param.getCvLabel(),param.getAccession(), param.getName(),param.getValue());
+                    if(param.getCvLabel().equalsIgnoreCase(WsContastants.CV_LABEL_ORGANISM)){
+                        organisms.add(value);
+                    }else if(param.getCvLabel().equalsIgnoreCase(WsContastants.CV_LABEL_CELL_COMPONENT) || param.getCvLabel().equalsIgnoreCase(WsContastants.CV_LABEL_CELL_TISSUE)){
+                        ((ArrayList<CvParamProvider>) organismParts).add(value);
+                    }else if(param.getCvLabel().equalsIgnoreCase(WsContastants.CV_LABEL_DISEASE)){
+                        ((ArrayList<CvParamProvider>) diseases).add(value);
+                    }
+                }
+            }
+        }
+
         return PrideProject.builder()
                 .accession(oracleProject.getAccession())
                 .dataProcessingProtocol(oracleProject.getDataProcessingProtocol())
@@ -123,6 +147,9 @@ public class Transformer {
                 .identifiedPTMStrings(ptms)
                 .projectTags(projectTags)
                 .keywords(keywords)
+                .diseases(diseases)
+                .organisms(organisms)
+                .organismParts(organismParts)
                 .build();
     }
 

@@ -4,25 +4,26 @@ import io.swagger.annotations.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
-import org.springframework.hateoas.Link;
 import org.springframework.hateoas.PagedResources;
 import org.springframework.http.*;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import uk.ac.ebi.pride.archive.repo.repos.file.ProjectFile;
 import uk.ac.ebi.pride.archive.repo.repos.project.Project;
+import uk.ac.ebi.pride.utilities.util.Tuple;
 import uk.ac.ebi.pride.ws.pride.assemblers.PrideProjectResourceAssembler;
-import uk.ac.ebi.pride.ws.pride.models.dataset.PrideProject;
+import uk.ac.ebi.pride.ws.pride.assemblers.ProjectFileResourceAssembler;
 import uk.ac.ebi.pride.ws.pride.models.dataset.ProjectResource;
 import uk.ac.ebi.pride.ws.pride.models.file.PrideFileResource;
 import uk.ac.ebi.pride.ws.pride.service.project.FileStorageService;
 import uk.ac.ebi.pride.ws.pride.service.project.ProjectService;
-import uk.ac.ebi.pride.ws.pride.transformers.Transformer;
 import uk.ac.ebi.pride.ws.pride.utils.APIError;
 import uk.ac.ebi.pride.ws.pride.utils.WsContastants;
 import uk.ac.ebi.pride.ws.pride.utils.WsUtils;
 import uk.ac.ebi.tsc.aap.client.model.User;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
@@ -42,8 +43,6 @@ public class ProjectController {
     final private ProjectService projectService;
     final private FileStorageService fileStorageService;
 
-
-
     @Autowired
     public ProjectController(ProjectService projectService, FileStorageService fileStorageService) {
         this.projectService = projectService;
@@ -58,13 +57,34 @@ public class ProjectController {
             @ApiResponse(code = 500, message = "Internal Server Error", response = APIError.class)})
     @PreAuthorize("isAuthenticated()")
     @RequestMapping(value = "/projects/private-submissions", method = RequestMethod.GET, produces = {MediaType.APPLICATION_JSON_VALUE})
-    public ResponseEntity<List<Project>> getPrivateProjects(Authentication authentication) {
+    public HttpEntity<PagedResources> getPrivateProjects(Authentication authentication,
+                                                            @RequestParam(value="pageSize", defaultValue = "100", required = false) int pageSize,
+                                                            @RequestParam(value="page", defaultValue = "0" ,  required = false) int page) {
 
         User currentUser = (User) (authentication).getDetails();
 
         List<Project> projectsList = projectService.findUserProjects(currentUser.getUserReference(),false);
+        PrideProjectResourceAssembler assembler = new PrideProjectResourceAssembler(authentication, ProjectController.class, ProjectResource.class);
+        projectsList = projectsList.stream().filter(project -> !project.isPublicProject()).collect(Collectors.toList());
+        List<ProjectResource> resources = assembler.toResources(projectsList);
 
-        return ResponseEntity.ok().body(projectsList);
+        long totalElements = projectsList.size();
+        long totalPages = totalElements / pageSize + 1;
+        PagedResources.PageMetadata pageMetadata = new PagedResources.PageMetadata(pageSize, page, totalElements, totalPages);
+
+        PagedResources<ProjectResource> pagedResources = new PagedResources<>(resources, pageMetadata,
+                linkTo(methodOn(ProjectController.class).getReviewerProjects(authentication, pageSize, page)).withSelfRel(),
+                linkTo(methodOn(ProjectController.class).getReviewerProjects(authentication, pageSize, (int) WsUtils.validatePage(page + 1, totalPages)))
+                        .withRel(WsContastants.HateoasEnum.next.name()),
+                linkTo(methodOn(ProjectController.class).getReviewerProjects( authentication, pageSize, (int) WsUtils.validatePage(page - 1, totalPages)))
+                        .withRel(WsContastants.HateoasEnum.previous.name()),
+                linkTo(methodOn(ProjectController.class).getReviewerProjects(authentication, pageSize, 0))
+                        .withRel(WsContastants.HateoasEnum.first.name()),
+                linkTo(methodOn(ProjectController.class).getReviewerProjects(authentication, pageSize, (int) totalPages))
+                        .withRel(WsContastants.HateoasEnum.last.name())
+        ) ;
+
+        return new HttpEntity<>(pagedResources);
     }
 
     @ApiOperation(notes = "Private PRIDE Archive Project submitted by the user which is under review of the reviewer. User needs to be authenticated to view his private submissions",
@@ -74,17 +94,17 @@ public class ProjectController {
             @ApiResponse(code = 500, message = "Internal Server Error", response = APIError.class)})
     @PreAuthorize("isAuthenticated()")
     @RequestMapping(value = "/projects/{accession}", method = RequestMethod.GET, produces = {MediaType.APPLICATION_JSON_VALUE})
-    public ResponseEntity<Project> getPrivateProject( Authentication authentication,
+    public ResponseEntity<Object> getPrivateProject( Authentication authentication,
                                                       @PathVariable(value ="accession") String projectAccession) {
 
         User currentUser = (User) (authentication).getDetails();
         List<Project> projectsList = projectService.findReviewerProjects(currentUser.getUserReference());
-        List<Project> privateProjects = projectsList.stream().filter(project -> project.getAccession().equals(projectAccession)).collect(Collectors.toList());
-        Project privateProject = null;
-        if(privateProjects.size() == 1){
-            privateProject = privateProjects.get(0);
-        }
-        return ResponseEntity.ok().body(privateProject);
+        Optional<Project> privateProject = projectsList.stream().filter(project -> project.getAccession().equals(projectAccession)).findFirst();
+
+        PrideProjectResourceAssembler assembler = new PrideProjectResourceAssembler(authentication, ProjectController.class, ProjectResource.class);
+        return privateProject.<ResponseEntity<Object>>map(oracleProject -> new ResponseEntity<>(assembler.toResource(oracleProject), HttpStatus.OK))
+                .orElseGet(() -> new ResponseEntity<>(WsContastants.PX_PROJECT_NOT_FOUND + projectAccession + WsContastants.CONTACT_PRIDE, new HttpHeaders(), HttpStatus.BAD_REQUEST));
+
     }
 
     @ApiOperation(notes = "List of PRIDE Archive Projects accessible to reviewer. User needs to be authenticated to view these submissions",
@@ -136,38 +156,38 @@ public class ProjectController {
     })
     @PreAuthorize("isAuthenticated()")
     @RequestMapping(value = "/projects/{accession}/files", method = RequestMethod.GET, produces = {MediaType.APPLICATION_JSON_VALUE})
-    public HttpEntity<PagedResources<PrideFileResource>> getFilesByProject(@PathVariable(value ="accession") String projectAccession){
+    public HttpEntity<PagedResources<PrideFileResource>> getFilesByProject(Authentication authentication,
+                                                                           @PathVariable(value ="accession") String projectAccession,
+                                                                           @RequestParam(value="pageSize", defaultValue = "100", required = false) int pageSize,
+                                                                           @RequestParam(value="page", defaultValue = "0" ,  required = false) int page){
 
-//        Tuple<Integer, Integer> pageParams = WsUtils.validatePageLimit(page, pageSize);
-//        page = pageParams.getKey();
-//        pageSize = pageParams.getValue();
-//        Sort.Direction direction = Sort.Direction.DESC;
-//        if(sortDirection.equalsIgnoreCase("ASC")){
-//            direction = Sort.Direction.ASC;
-//        }
-//
-//        Page<MongoPrideFile> projectFiles = mongoFileService.findFilesByProjectAccessionAndFiler(projectAccession, filter, PageRequest.of(page, pageSize,direction,sortFields.split(",")));
-//        ProjectFileResourceAssembler assembler = new ProjectFileResourceAssembler(FileController.class, PrideFileResource.class);
-//
-//        List<PrideFileResource> resources = assembler.toResources(projectFiles);
-//
-//        long totalElements = projectFiles.getTotalElements();
-//        long totalPages = totalElements / pageSize;
-//        PagedResources.PageMetadata pageMetadata = new PagedResources.PageMetadata(pageSize, page, totalElements, totalPages);
-//
-//        PagedResources<PrideFileResource> pagedResources = new PagedResources<>(resources, pageMetadata,
-//                linkTo(methodOn(ProjectController.class).getFilesByProject(projectAccession, filter, pageSize, page,sortDirection,sortFields)).withSelfRel(),
-//                linkTo(methodOn(ProjectController.class).getFilesByProject(projectAccession, filter, pageSize, (int) WsUtils.validatePage(page + 1, totalPages),sortDirection,sortFields))
-//                        .withRel(WsContastants.HateoasEnum.next.name()),
-//                linkTo(methodOn(ProjectController.class).getFilesByProject(projectAccession,filter, pageSize, (int) WsUtils.validatePage(page - 1, totalPages),sortDirection,sortFields))
-//                        .withRel(WsContastants.HateoasEnum.previous.name()),
-//                linkTo(methodOn(ProjectController.class).getFilesByProject(projectAccession, filter, pageSize, 0,sortDirection,sortFields))
-//                        .withRel(WsContastants.HateoasEnum.first.name()),
-//                linkTo(methodOn(ProjectController.class).getFilesByProject(projectAccession, filter, pageSize, (int) totalPages,sortDirection,sortFields))
-//                        .withRel(WsContastants.HateoasEnum.last.name())
-//        ) ;
+        Tuple<Integer, Integer> pageParams = WsUtils.validatePageLimit(page, pageSize);
+        page = pageParams.getKey();
+        pageSize = pageParams.getValue();
 
-        return new HttpEntity<>(null);
+        List<ProjectFile> projectFiles = projectService.findProjectFiles(projectAccession);
+
+        ProjectFileResourceAssembler assembler = new ProjectFileResourceAssembler(projectAccession, ProjectController.class, PrideFileResource.class);
+
+        List<PrideFileResource> resources = assembler.toResources(projectFiles);
+
+        long totalElements = projectFiles.size();
+        long totalPages = totalElements / pageSize;
+        PagedResources.PageMetadata pageMetadata = new PagedResources.PageMetadata(pageSize, page, totalElements, totalPages);
+
+        PagedResources<PrideFileResource> pagedResources = new PagedResources<>(resources, pageMetadata,
+                linkTo(methodOn(ProjectController.class).getFilesByProject(authentication, projectAccession, pageSize, page)).withSelfRel(),
+                linkTo(methodOn(ProjectController.class).getFilesByProject(authentication, projectAccession, pageSize, (int) WsUtils.validatePage(page + 1, totalPages)))
+                        .withRel(WsContastants.HateoasEnum.next.name()),
+                linkTo(methodOn(ProjectController.class).getFilesByProject(authentication, projectAccession,pageSize, (int) WsUtils.validatePage(page - 1, totalPages)))
+                        .withRel(WsContastants.HateoasEnum.previous.name()),
+                linkTo(methodOn(ProjectController.class).getFilesByProject(authentication, projectAccession,pageSize, 0))
+                        .withRel(WsContastants.HateoasEnum.first.name()),
+                linkTo(methodOn(ProjectController.class).getFilesByProject(authentication, projectAccession, pageSize, (int) totalPages))
+                        .withRel(WsContastants.HateoasEnum.last.name())
+        ) ;
+
+        return new HttpEntity<>(pagedResources);
     }
 
 
@@ -178,15 +198,24 @@ public class ProjectController {
             @ApiResponse(code = 500, message = "Internal Server Error", response = APIError.class)
     })
     @PreAuthorize("isAuthenticated()")
-    @RequestMapping(value = "/projects/private/{accession}/files/{fileaccession}", method = RequestMethod.GET,
+    @RequestMapping(value = "/projects/private/{projectId}/files/{fileId}", method = RequestMethod.GET,
             produces = {MediaType.APPLICATION_OCTET_STREAM_VALUE})
-    public HttpEntity<Resource> getFilesByProject(@PathVariable(value ="accession") String projectAccession,
-                                                                  @PathVariable(value="fileaccession") String fileaccession) throws Exception {
+    public HttpEntity<Resource> getFileByProject(@PathVariable(value ="projectId") String accession,
+                                                                  @PathVariable(value="fileId") Long fileId){
 
-        String fileName = projectService.getFilePath(projectAccession, fileaccession);
+         Optional<ProjectFile> projectFile = projectService.getFilePath(fileId);
+         String fileName = null;
+         if(projectFile.isPresent()){
+             fileName = accession + "/" + "submitted" + "/" + projectFile.get().getFileName();
+         }
 
         // Load file as Resource
-        Resource resource = fileStorageService.loadFileAsResource(fileName);
+        Resource resource = null;
+        try {
+            resource = fileStorageService.loadFileAsResource(fileName);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
         // Try to determine file's content type
         String contentType = "application/octet-stream";

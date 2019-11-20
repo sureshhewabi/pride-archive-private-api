@@ -5,6 +5,12 @@ package uk.ac.ebi.pride.ws.pride.utils;
  */
 public class WsContastants {
 
+    // General Sample processing Capture
+    public static final String CV_LABEL_ORGANISM = "NEWT";
+    public static final String CV_LABEL_CELL_COMPONENT = "CL";
+    public static final String CV_LABEL_CELL_TISSUE = "BTO";
+    public static final String CV_LABEL_DISEASE = "DOID";
+
     public enum HateoasEnum {
         next, previous, last, first, facets, files, peptideevidences, psms;
     }
