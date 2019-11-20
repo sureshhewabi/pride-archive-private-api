@@ -13,7 +13,6 @@ import uk.ac.ebi.pride.archive.repo.util.AAPConstants;
 import uk.ac.ebi.pride.ws.pride.models.user.ChangePassword;
 
 import java.nio.charset.Charset;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
