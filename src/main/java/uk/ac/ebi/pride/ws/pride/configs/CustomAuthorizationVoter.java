@@ -1,4 +1,4 @@
-package uk.ac.ebi.pride.ws.pride.security.authorization;
+package uk.ac.ebi.pride.ws.pride.configs;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.AccessDecisionVoter;
@@ -23,10 +23,12 @@ public class CustomAuthorizationVoter implements AccessDecisionVoter {
     @Override
     public int vote(Authentication authentication, Object object, Collection collection) {
         try{
-            User currentUser = (User) (authentication).getDetails();
-            Set<Domain> domainSet = currentUser.getDomains();
-            if(domainSet.contains(prideDomain)){
-                return ACCESS_GRANTED;
+            if(authentication instanceof User){
+                User currentUser = (User) (authentication).getDetails();
+                Set<Domain> domainSet = currentUser.getDomains();
+                if(domainSet.contains(prideDomain)){
+                    return ACCESS_GRANTED;
+                }
             }
         }catch(Exception e){
             log.error(e.getMessage(),e);

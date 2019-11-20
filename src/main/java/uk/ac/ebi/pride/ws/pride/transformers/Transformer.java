@@ -5,12 +5,14 @@ import uk.ac.ebi.pride.archive.dataprovider.data.ptm.IdentifiedModification;
 import uk.ac.ebi.pride.archive.dataprovider.data.ptm.IdentifiedModificationProvider;
 import uk.ac.ebi.pride.archive.dataprovider.param.CvParam;
 import uk.ac.ebi.pride.archive.dataprovider.param.CvParamProvider;
-import uk.ac.ebi.pride.archive.dataprovider.sample.ISampleMSRunRow;
-import uk.ac.ebi.pride.archive.dataprovider.sample.SampleProvider;
-import uk.ac.ebi.pride.mongodb.archive.model.msrun.MongoPrideMSRun;
-import uk.ac.ebi.pride.ws.pride.models.file.PrideMSRun;
-import uk.ac.ebi.pride.ws.pride.models.sample.Sample;
-import uk.ac.ebi.pride.ws.pride.models.sample.SampleMSRunRow;
+import uk.ac.ebi.pride.archive.dataprovider.reference.Reference;
+import uk.ac.ebi.pride.archive.dataprovider.user.Contact;
+import uk.ac.ebi.pride.archive.dataprovider.user.ContactProvider;
+import uk.ac.ebi.pride.archive.repo.repos.project.Project;
+import uk.ac.ebi.pride.archive.repo.repos.project.ProjectTag;
+import uk.ac.ebi.pride.archive.repo.repos.user.User;
+import uk.ac.ebi.pride.utilities.util.StringUtils;
+import uk.ac.ebi.pride.ws.pride.models.dataset.PrideProject;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -28,96 +30,112 @@ import java.util.stream.Collectors;
  */
 public class Transformer {
 
+
     /**
-     * Transform a Mongo {@link MongoPrideMSRun} to a Web service {@link PrideMSRun}
-     * @param mongoFile msRun from mongo database
-     * @return msrun
+     * Transform a list of projects from Oracle
+     * @param oracleProjects list of oracle projects
+     * @return list of projects from API
      */
-    public static PrideMSRun transformMSRun(MongoPrideMSRun mongoFile){
-        PrideMSRun msRun = new PrideMSRun(mongoFile.getProjectAccessions(), mongoFile.getAnalysisAccessions(), mongoFile.getAccession(), null, null, null, mongoFile.getFileSizeBytes(), null, mongoFile.getFileName(), false,null,null,null, mongoFile.getAdditionalAttributes());
-
-        if(mongoFile.getFileProperties() != null)
-            msRun.setFileProperties(mongoFile.getFileProperties()
-                    .stream().map(x-> new CvParam(x.getCvLabel(), x.getAccession(), x.getName(), x.getValue()))
-                    .collect(Collectors.toSet()));
-        if(mongoFile.getInstrumentProperties() != null)
-            msRun.setInstrumentProperties(mongoFile.getInstrumentProperties()
-                    .stream().map(x-> new CvParam(x.getCvLabel(), x.getAccession(), x.getName(), x.getValue()))
-                    .collect(Collectors.toSet()));
-        if(mongoFile.getMsData() != null)
-            msRun.setMsData(mongoFile.getMsData()
-                    .stream().map(x-> new CvParam(x.getCvLabel(), x.getAccession(), x.getName(), x.getValue()))
-                    .collect(Collectors.toSet()));
-        if(mongoFile.getScanSettings() != null)
-            msRun.setScanSettings(mongoFile.getScanSettings()
-                    .stream().map(x-> new CvParam(x.getCvLabel(), x.getAccession(), x.getName(), x.getValue()))
-                    .collect(Collectors.toSet()));
-        if(mongoFile.getIdSettings() != null)
-            msRun.setIdSettings(new ArrayList<>(mongoFile.getIdSettings()));
-
-        return msRun;
+    public static List<PrideProject> transformPrivateProjects(List<Project> oracleProjects){
+        return oracleProjects.stream().map(x -> transformOracleProject(x)).collect(Collectors.toList());
     }
 
+    /**
+     * Transform a project
+     * @param oracleProject oracle Project
+     * @return API project
+     */
+    public static PrideProject transformOracleProject(Project oracleProject) {
+        String doi = null;
+        if (oracleProject.getDoi() != null && oracleProject.getDoi().isPresent())
+            doi = oracleProject.getDoi().get();
 
-    public static SampleMSRunRow transformSampleMSrun(ISampleMSRunRow mongoSampleMSrun){
+        Collection<CvParamProvider> instruments = new ArrayList<>();
+        if(oracleProject.getInstruments() != null && oracleProject.getInstruments().size() > 0)
+            instruments = oracleProject.getInstruments().stream().map( x-> new CvParam(x.getCvLabel(), x.getAccession(),x.getName(), x.getValue())).collect(Collectors.toList());
 
-        CvParamProvider fractionMongo = mongoSampleMSrun.getFractionIdentifierCvParam();
-        CvParamProvider labelMongo = mongoSampleMSrun.getSampleLabel();
-
-        // Capture the Fraction information
-        CvParam fraction = null;
-        if(fractionMongo != null)
-            fraction = new CvParam(fractionMongo.getCvLabel(), fractionMongo.getAccession(),fractionMongo.getName(), fractionMongo.getValue());
-
-        //Capture the Labeling
-        CvParam label = null;
-        if(labelMongo != null)
-            label = new CvParam(labelMongo.getCvLabel(), labelMongo.getAccession(),labelMongo.getName(), labelMongo.getValue());
-
-        //Capture the Labeling
-        CvParam reagent = null;
-        if (mongoSampleMSrun.getLabelReagent() != null)
-            reagent = new CvParam(mongoSampleMSrun.getLabelReagent().getCvLabel(), mongoSampleMSrun.getLabelReagent().getAccession(), mongoSampleMSrun.getLabelReagent().getName(), mongoSampleMSrun.getLabelReagent().getValue());
-
-        List<Tuple<CvParam, CvParam>> sampleProperties = (mongoSampleMSrun.getSampleProperties() != null)? mongoSampleMSrun.getSampleProperties()
-                .stream().map( x-> {
-                    CvParamProvider key = (CvParamProvider) x.getKey();
-                    CvParamProvider value = (CvParamProvider) x.getValue();
-                    return new Tuple<>(new CvParam(key.getCvLabel(), key.getAccession(), key.getName(), key.getValue()),
-                            new CvParam(value.getCvLabel(), value.getAccession(), value.getName(), value.getValue()));
-                })
-                .collect(Collectors.toList())
-                : Collections.emptyList();
-
-        List<Tuple<CvParam, CvParam>> msrunProperties = (mongoSampleMSrun.getMsRunProperties() != null)? mongoSampleMSrun.getMsRunProperties()
-                .stream().map( x-> {
-                    CvParamProvider key = (CvParamProvider) x.getKey();
-                    CvParamProvider value = (CvParamProvider) x.getValue();
-                    return new Tuple<>(new CvParam(key.getCvLabel(), key.getAccession(), key.getName(), key.getValue()),
-                            new CvParam(value.getCvLabel(), value.getAccession(), value.getName(), value.getValue()));
-                })
-                .collect(Collectors.toList())
-                : Collections.emptyList();
+        Collection<CvParamProvider> softwares = new ArrayList<>();
+        if(oracleProject.getSoftware() != null && oracleProject.getSoftware().size() > 0)
+            softwares = oracleProject.getSoftware().stream().map( x -> new CvParam(x.getCvLabel(), x.getAccession(),x.getName(),x.getValue())).collect(Collectors.toList());
 
 
-        return new SampleMSRunRow(mongoSampleMSrun.getProjectAccession(), mongoSampleMSrun.getSampleAccession(),
-                mongoSampleMSrun.getMsRunAccession(), mongoSampleMSrun.getFractionAccession(),reagent,
-                label, sampleProperties, msrunProperties);
+        Collection<ContactProvider> labPIs = new ArrayList<>();
+        if(oracleProject.getLabHeads() != null && oracleProject.getLabHeads().size() > 0)
+            labPIs = oracleProject.getLabHeads().stream()
+                    .map( x-> new Contact(x.getTitle(), x.getFirstName(),x.getLastName(),
+                            String.valueOf(x.getId()),x.getAffiliation(), x.getEmail(), x.getCountry(),x.getOrcid()))
+                    .collect(Collectors.toList());
 
-    }
-
-    public static Sample transformSample(SampleProvider sample) {
-        if(sample != null){
-            List<Tuple<CvParam, CvParam>> properties = new ArrayList<>();
-            if(sample.getSampleProperties() != null)
-                properties = sample.getSampleProperties().stream().map(x -> new Tuple<>(new CvParam(x.getKey().getCvLabel(), x.getKey().getAccession(), x.getKey().getName(), x.getKey().getValue()),
-                        new CvParam(x.getValue().getCvLabel(), x.getValue().getAccession(), x.getValue().getName(), x.getValue().getValue()))).collect(Collectors.toList());
-            return Sample.builder().accession((String) sample.getAccession())
-                    .sampleProperties(properties)
-                    .build();
+        Collection<ContactProvider> submitters = new ArrayList<>();
+        if(oracleProject.getSubmitter() != null){
+            User x = oracleProject.getSubmitter();
+            submitters.add(new Contact(x.getTitle(), x.getFirstName(),x.getLastName(),
+                    String.valueOf(x.getId()),x.getAffiliation(), x.getEmail(), x.getCountry(),x.getOrcid()));
         }
-        return null;
+
+        Collection<CvParamProvider> quantificationMethods = new ArrayList<>();
+        if(oracleProject.getQuantificationMethods() != null && oracleProject.getQuantificationMethods().size() > 0)
+            quantificationMethods = oracleProject.getQuantificationMethods().stream()
+                    .map(x -> new CvParam(x.getCvLabel(), x.getAccession(), x.getName(), x.getValue()))
+                    .collect(Collectors.toList());
+
+        //References
+        List<Reference> references = oracleProject.getReferences().stream()
+                .map( reference -> new Reference(reference.getReferenceLine(), reference.getPubmedId(), reference.getDoi()))
+                .collect(Collectors.toList());
+
+        //Modifications
+        Set<CvParamProvider> ptms = oracleProject.getPtms().stream()
+                .map(ptm -> new CvParam(ptm.getCvLabel(), ptm.getAccession(), ptm.getName(), ptm.getValue()))
+                .collect(Collectors.toSet());
+
+
+        //Get software information
+        Set<CvParam> softwareList = oracleProject.getSoftware()
+                .stream()
+                .filter(software -> software.getCvParam() != null )
+                .map(software -> new CvParam(software.getCvParam().getCvLabel(), software.getCvParam().getAccession(),
+                        software.getCvParam().getName(), software.getCvParam().getValue()))
+                .collect(Collectors.toSet());
+
+        // Project Tags
+        List<String> projectTags = oracleProject.getProjectTags().stream()
+                .map(ProjectTag::getTag)
+                .map(Transformer::convertSentenceStyle)
+                .collect(Collectors.toList());
+
+        // Project Keywords
+        List<String> keywords = oracleProject.getKeywords().stream()
+                .map(Transformer::convertSentenceStyle).collect(Collectors.toList());
+
+        return PrideProject.builder()
+                .accession(oracleProject.getAccession())
+                .dataProcessingProtocol(oracleProject.getDataProcessingProtocol())
+                .sampleProcessingProtocol(oracleProject.getSampleProcessingProtocol())
+                .projectDescription(oracleProject.getProjectDescription())
+                .doi(doi)
+                .instruments(instruments)
+                .softwares(softwares)
+                .labPIs(labPIs)
+                .submitters(submitters)
+                .submissionDate(oracleProject.getSubmissionDate())
+                .quantificationMethods(quantificationMethods)
+                .identifiedPTMStrings(ptms)
+                .projectTags(projectTags)
+                .keywords(keywords)
+                .build();
     }
+
+    /**
+     * Get convert sentence to Capitalize Style
+     * @param sentence original sentence
+     * @return Capitalize sentence
+     */
+    private static String convertSentenceStyle(String sentence){
+        sentence = sentence.toLowerCase().trim();
+        return org.apache.commons.lang3.StringUtils.capitalize(sentence);
+    }
+
 
     /**
      * Transform a List of {@link IdentifiedModificationProvider} to a List of {@link IdentifiedModification}

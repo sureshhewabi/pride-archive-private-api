@@ -8,19 +8,10 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Primary;
-import org.springframework.data.web.HateoasPageableHandlerMethodArgumentResolver;
-import org.springframework.data.web.HateoasSortHandlerMethodArgumentResolver;
-import org.springframework.hateoas.RelProvider;
-import org.springframework.hateoas.ResourceAssembler;
-import org.springframework.hateoas.core.EvoInflectorRelProvider;
 import org.springframework.stereotype.Component;
 import springfox.documentation.swagger2.annotations.EnableSwagger2;
-import uk.ac.ebi.pride.solr.indexes.pride.model.PrideSolrProject;
-import uk.ac.ebi.pride.ws.pride.hateoas.CustomPagedResourcesAssembler;
-import uk.ac.ebi.pride.ws.pride.hateoas.FacetsResourceAssembler;
 
 /**
  * Retrieve the projects {@link uk.ac.ebi.pride.archive.dataprovider.project.ProjectProvider} from PRIDE Archive and the corresponding information.
@@ -33,8 +24,7 @@ import uk.ac.ebi.pride.ws.pride.hateoas.FacetsResourceAssembler;
 
 @SpringBootApplication
 @ComponentScan({"uk.ac.ebi.pride.ws.pride","uk.ac.ebi.tsc.aap.client.security",
-        "uk.ac.ebi.pride.utilities.ols.web.service.cache" , "uk.ac.ebi.pride.mongodb.configs",
-        "uk.ac.ebi.pride.archive.spectra.configs"})
+        "uk.ac.ebi.pride.utilities.ols.web.service.cache"})
 @Slf4j
 public class Application {
 
@@ -55,29 +45,5 @@ public class Application {
         }
     }
 
-    @Bean
-    public RelProvider relProvider() {
-        return new EvoInflectorRelProvider();
-    }
 
-    @Bean
-    public ResourceAssembler facetResourceAssembler(){
-        return new FacetsResourceAssembler();
-    }
-
-    @Bean
-    public HateoasPageableHandlerMethodArgumentResolver pageableResolver() {
-        return new HateoasPageableHandlerMethodArgumentResolver(sortResolver());
-    }
-
-    @Bean
-    public HateoasSortHandlerMethodArgumentResolver sortResolver() {
-        return new HateoasSortHandlerMethodArgumentResolver();
-    }
-
-    @SuppressWarnings("unchecked")
-    @Bean
-    public CustomPagedResourcesAssembler<PrideSolrProject> customPagedResourcesAssembler(){
-        return new CustomPagedResourcesAssembler<PrideSolrProject>(pageableResolver(), facetResourceAssembler());
-    }
 }

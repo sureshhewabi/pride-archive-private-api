@@ -27,4 +27,8 @@ public class ProjectService {
         List<Project> projectsList = projectRepository.findFilteredByReviewer(userReference);
         return projectsList;
     }
+
+    public String getFilePath(String accession, String fileAccession){
+        return null;
+    }
 }

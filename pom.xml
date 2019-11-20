@@ -10,9 +10,9 @@
     </parent>
 
     <groupId>uk.ac.ebi.pride.archive</groupId>
-    <artifactId>pride-archive-reviewers-ws</artifactId>
+    <artifactId>pride-archive-private-ws</artifactId>
     <version>1.0.0-SNAPSHOT</version>
-    <name>PRIDE Archive WS</name>
+    <name>PRIDE Archive private WS</name>
 
     <properties>
         <uk.ac.ebi.pride.architectural-pride-tdd.version>1.0.4-SNAPSHOT</uk.ac.ebi.pride.architectural-pride-tdd.version>
@@ -21,6 +21,7 @@
         <uk.ac.ebi.pride.archive.pride-mongodb-repo.version>1.0.3-SNAPSHOT</uk.ac.ebi.pride.archive.pride-mongodb-repo.version>
         <uk.ac.ebi.pride.archive.spectra-archive.version>0.0.1-SNAPSHOT</uk.ac.ebi.pride.archive.spectra-archive.version>
         <uk.ac.ebi.pride.archive.utilities.version>2.0.19-SNAPSHOT</uk.ac.ebi.pride.archive.utilities.version>
+        <uk.ac.ebi.pride.utilities.client>2.13-SNAPSHOT</uk.ac.ebi.pride.utilities.client>
         <archive.repo.version>1.0.3-SNAPSHOT</archive.repo.version>
         <io.springfox.swagger.version>2.7.0</io.springfox.swagger.version>
         <aapClientVersion>1.0.3-SNAPSHOT</aapClientVersion>
@@ -35,15 +36,9 @@
         </dependency>
 
         <dependency>
-            <groupId>uk.ac.ebi.pride.archive</groupId>
-            <artifactId>pride-spectra-archive</artifactId>
-            <version>${uk.ac.ebi.pride.archive.spectra-archive.version}</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>uk.ac.ebi.pride.archive</groupId>
-                    <artifactId>data-provider-api</artifactId>
-                </exclusion>
-            </exclusions>
+            <groupId>uk.ac.ebi.pride.utilities</groupId>
+            <artifactId>ols-client</artifactId>
+            <version>${uk.ac.ebi.pride.utilities.client}</version>
         </dependency>
 
         <!--Spring dependencies-->
@@ -101,35 +96,35 @@
             <scope>runtime</scope>
         </dependency>
 
-        <dependency>
-            <groupId>uk.ac.ebi.pride.archive</groupId>
-            <artifactId>pride-mongodb-repo</artifactId>
-            <version>${uk.ac.ebi.pride.archive.pride-mongodb-repo.version}</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>uk.ac.ebi.pride.archive</groupId>
-                    <artifactId>data-provider-api</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
+        <!--<dependency>-->
+            <!--<groupId>uk.ac.ebi.pride.archive</groupId>-->
+            <!--<artifactId>pride-mongodb-repo</artifactId>-->
+            <!--<version>${uk.ac.ebi.pride.archive.pride-mongodb-repo.version}</version>-->
+            <!--<exclusions>-->
+                <!--<exclusion>-->
+                    <!--<groupId>uk.ac.ebi.pride.archive</groupId>-->
+                    <!--<artifactId>data-provider-api</artifactId>-->
+                <!--</exclusion>-->
+            <!--</exclusions>-->
+        <!--</dependency>-->
 
-        <dependency>
-            <groupId>uk.ac.ebi.pride.archive</groupId>
-            <artifactId>pride-solr-indexes</artifactId>
-            <version>${uk.ac.ebi.pride.archive.pride-solr-indexes.version}</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>uk.ac.ebi.pride.archive</groupId>
-                    <artifactId>data-provider-api</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
+        <!--<dependency>-->
+            <!--<groupId>uk.ac.ebi.pride.archive</groupId>-->
+            <!--<artifactId>pride-solr-indexes</artifactId>-->
+            <!--<version>${uk.ac.ebi.pride.archive.pride-solr-indexes.version}</version>-->
+            <!--<exclusions>-->
+                <!--<exclusion>-->
+                    <!--<groupId>uk.ac.ebi.pride.archive</groupId>-->
+                    <!--<artifactId>data-provider-api</artifactId>-->
+                <!--</exclusion>-->
+            <!--</exclusions>-->
+        <!--</dependency>-->
 
-        <dependency>
-            <groupId>org.atteo</groupId>
-            <artifactId>evo-inflector</artifactId>
-            <version>1.2.2</version>
-        </dependency>
+        <!--<dependency>-->
+            <!--<groupId>org.atteo</groupId>-->
+            <!--<artifactId>evo-inflector</artifactId>-->
+            <!--<version>1.2.2</version>-->
+        <!--</dependency>-->
 
         <dependency>
             <groupId>com.querydsl</groupId>
@@ -149,13 +144,6 @@
             <artifactId>springfox-swagger-ui</artifactId>
             <version>${io.springfox.swagger.version}</version>
             <scope>compile</scope>
-        </dependency>
-
-        <!--Spring REST Docs-->
-        <dependency>
-            <groupId>uk.ac.ebi.pride.utilities</groupId>
-            <artifactId>pride-mod</artifactId>
-            <version>2.1.11</version>
         </dependency>
 
         <dependency>

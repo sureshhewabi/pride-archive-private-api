@@ -1,4 +1,4 @@
-package uk.ac.ebi.pride.ws.pride.security.config;
+package uk.ac.ebi.pride.ws.pride.configs;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -17,7 +17,6 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.access.expression.WebExpressionVoter;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import uk.ac.ebi.pride.ws.pride.security.authorization.CustomAuthorizationVoter;
 import uk.ac.ebi.tsc.aap.client.security.StatelessAuthenticationEntryPoint;
 import uk.ac.ebi.tsc.aap.client.security.StatelessAuthenticationFilter;
 import uk.ac.ebi.tsc.aap.client.security.TokenAuthenticationService;
