@@ -12,8 +12,6 @@ import uk.ac.ebi.pride.archive.repo.repos.project.Project;
 import uk.ac.ebi.pride.archive.repo.repos.project.ProjectCvParam;
 import uk.ac.ebi.pride.archive.repo.repos.project.ProjectTag;
 import uk.ac.ebi.pride.archive.repo.repos.user.User;
-import uk.ac.ebi.pride.utilities.term.CvTermReference;
-import uk.ac.ebi.pride.utilities.util.StringUtils;
 import uk.ac.ebi.pride.ws.pride.models.dataset.PrideProject;
 import uk.ac.ebi.pride.ws.pride.utils.WsContastants;
 
@@ -40,7 +38,7 @@ public class Transformer {
      * @return list of projects from API
      */
     public static List<PrideProject> transformPrivateProjects(List<Project> oracleProjects){
-        return oracleProjects.stream().map(x -> transformOracleProject(x)).collect(Collectors.toList());
+        return oracleProjects.stream().map(Transformer::transformOracleProject).collect(Collectors.toList());
     }
 
     /**

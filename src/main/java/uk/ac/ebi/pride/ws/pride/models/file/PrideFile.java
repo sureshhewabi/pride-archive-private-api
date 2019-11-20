@@ -11,7 +11,6 @@ import uk.ac.ebi.pride.archive.dataprovider.param.CvParamProvider;
 import javax.xml.bind.annotation.XmlRootElement;
 import java.io.Serializable;
 import java.util.Date;
-import java.util.List;
 import java.util.Set;
 
 /**

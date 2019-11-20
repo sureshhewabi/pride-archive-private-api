@@ -1,7 +1,5 @@
 package uk.ac.ebi.pride.ws.pride.utils;
 
-import uk.ac.ebi.pride.ws.pride.models.PrideArchiveAPIField;
-
 /**
  * This code is licensed under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance

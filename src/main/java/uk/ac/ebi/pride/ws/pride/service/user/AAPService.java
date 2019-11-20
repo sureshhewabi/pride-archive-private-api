@@ -54,7 +54,7 @@ public class AAPService {
         HttpHeaders headers = new HttpHeaders();
         headers.add("Authorization", "Bearer "+token);
         headers.setContentType(MediaType.APPLICATION_JSON_UTF8);
-        headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON_UTF8));
+        headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON_UTF8));
         return headers;
     }
 
