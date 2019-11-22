@@ -17,9 +17,6 @@
     <properties>
         <uk.ac.ebi.pride.architectural-pride-tdd.version>1.0.4-SNAPSHOT</uk.ac.ebi.pride.architectural-pride-tdd.version>
         <uk.ac.ebi.pride.architectural-pride-spring.version>1.0.0-SNAPSHOT</uk.ac.ebi.pride.architectural-pride-spring.version>
-        <uk.ac.ebi.pride.archive.pride-solr-indexes.version>1.0.3-SNAPSHOT</uk.ac.ebi.pride.archive.pride-solr-indexes.version>
-        <uk.ac.ebi.pride.archive.pride-mongodb-repo.version>1.0.3-SNAPSHOT</uk.ac.ebi.pride.archive.pride-mongodb-repo.version>
-        <uk.ac.ebi.pride.archive.spectra-archive.version>0.0.1-SNAPSHOT</uk.ac.ebi.pride.archive.spectra-archive.version>
         <uk.ac.ebi.pride.archive.utilities.version>2.0.19-SNAPSHOT</uk.ac.ebi.pride.archive.utilities.version>
         <uk.ac.ebi.pride.utilities.client>2.13-SNAPSHOT</uk.ac.ebi.pride.utilities.client>
         <archive.repo.version>1.0.3-SNAPSHOT</archive.repo.version>
@@ -96,36 +93,6 @@
             <scope>runtime</scope>
         </dependency>
 
-        <!--<dependency>-->
-            <!--<groupId>uk.ac.ebi.pride.archive</groupId>-->
-            <!--<artifactId>pride-mongodb-repo</artifactId>-->
-            <!--<version>${uk.ac.ebi.pride.archive.pride-mongodb-repo.version}</version>-->
-            <!--<exclusions>-->
-                <!--<exclusion>-->
-                    <!--<groupId>uk.ac.ebi.pride.archive</groupId>-->
-                    <!--<artifactId>data-provider-api</artifactId>-->
-                <!--</exclusion>-->
-            <!--</exclusions>-->
-        <!--</dependency>-->
-
-        <!--<dependency>-->
-            <!--<groupId>uk.ac.ebi.pride.archive</groupId>-->
-            <!--<artifactId>pride-solr-indexes</artifactId>-->
-            <!--<version>${uk.ac.ebi.pride.archive.pride-solr-indexes.version}</version>-->
-            <!--<exclusions>-->
-                <!--<exclusion>-->
-                    <!--<groupId>uk.ac.ebi.pride.archive</groupId>-->
-                    <!--<artifactId>data-provider-api</artifactId>-->
-                <!--</exclusion>-->
-            <!--</exclusions>-->
-        <!--</dependency>-->
-
-        <!--<dependency>-->
-            <!--<groupId>org.atteo</groupId>-->
-            <!--<artifactId>evo-inflector</artifactId>-->
-            <!--<version>1.2.2</version>-->
-        <!--</dependency>-->
-
         <dependency>
             <groupId>com.querydsl</groupId>
             <artifactId>querydsl-lucene4</artifactId>
@@ -184,33 +151,6 @@
 
     <build>
         <plugins>
-            <plugin>
-                <groupId>org.asciidoctor</groupId>
-                <artifactId>asciidoctor-maven-plugin</artifactId>
-                <version>1.5.3</version>
-                <executions>
-                    <execution>
-                        <id>generate-docs</id>
-                        <phase>prepare-package</phase>
-                        <goals>
-                            <goal>process-asciidoc</goal>
-                        </goals>
-                        <configuration>
-                            <backend>html</backend>
-                            <attributes>
-                                <snippets>${project.build.directory}/generated-snippets</snippets>
-                            </attributes>
-                        </configuration>
-                    </execution>
-                </executions>
-                <dependencies>
-                    <dependency>
-                        <groupId>org.springframework.restdocs</groupId>
-                        <artifactId>spring-restdocs-asciidoctor</artifactId>
-                        <version>2.0.2.RELEASE</version>
-                    </dependency>
-                </dependencies>
-            </plugin>
             <plugin>
                 <artifactId>maven-resources-plugin</artifactId>
                 <version>2.7</version>
@@ -298,12 +238,5 @@
             <url>http://www.ebi.ac.uk/Tools/maven/repos/content/repositories/pst-snapshots</url>
         </repository>
     </repositories>
-
-    <scm>
-        <connection>scm:git:https://github.com/PRIDE-Archive/pride-solr-indexes.git</connection>
-        <developerConnection>scm:git:https://github.com/PRIDE-Archive/pride-solr-indexes.git</developerConnection>
-        <url>https://github.com/PRIDE-Archive/pride-solr-indexes</url>
-        <tag>HEAD</tag>
-    </scm>
 </project>
 
