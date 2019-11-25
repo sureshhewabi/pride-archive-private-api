@@ -59,3 +59,12 @@ pride:
 
 ## PRIDE archive private directory
 pride.prod.private.folder: $private_folder
+
+twitter:
+  account: $NOT_USED
+  num.tweets.to.show:  4
+  pride:
+    consumer: $NOT_USED
+    consumer.secret: $NOT_USED
+    token: $NOT_USED
+    token.secret: $NOT_USED
