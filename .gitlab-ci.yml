@@ -38,7 +38,7 @@ before_script:
     - ssh $SERVER_USER@${DEPLOY_SERVERS_ARRAY[0]} "bash && cd $DEPLOY_PATH && mkdir $DEPLOY_DIR"
     - rsync -a target/*jar config $SERVER_USER@${DEPLOY_SERVERS_ARRAY[0]}:$DEPLOY_PATH/$DEPLOY_DIR/
     - ssh $SERVER_USER@${DEPLOY_SERVERS_ARRAY[0]} "bash && cd $DEPLOY_PATH && ln -snf $DEPLOY_DIR current"
-    - for i in "${DEPLOY_SERVERS_ARRAY[@]}"; do ssh $i "bash && cd $DEPLOY_PATH && (sh $STOP_SCRIPT || true) && (sh $START_SCRIPT > /dev/null 2>&1 &) && exit"; done
+    - for i in "${DEPLOY_SERVERS_ARRAY[@]}"; do ssh $SERVER_USER@$i "bash && cd $DEPLOY_PATH && (sh $STOP_SCRIPT || true) && (sh $START_SCRIPT > /dev/null 2>&1 &) && exit"; done
     #  only:
     ##    - master
 
