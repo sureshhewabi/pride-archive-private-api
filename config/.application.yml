@@ -1,0 +1,61 @@
+server:
+  port: $port
+  servlet.contextPath: /pride/private/ws/archive/v2
+
+app.vhost: $app_vhost
+
+# LOGGING Properties
+logging:
+  path: './logs_${HOSTNAME}/'
+  level:
+    root: INFO
+    org:
+      springframework:
+        web: INFO
+        boot: INFO
+      apache.solr: INFO
+      hibernate:
+        SQL: INFO
+        type.descriptor.sql.BasicBinder: INFO
+
+# To avoid errors while parsing null values in objects
+spring.jackson.default-property-inclusion: NON_NULL
+
+# Oracle Database
+spring:
+  jpa.database: default
+  datasource:
+    oracle:
+      jdbcUrl: $oracle_jdbc_url
+      username: $oracle_username
+      password: $oracle_password
+      driver-class-name: oracle.jdbc.OracleDriver
+
+#aap props
+aap:
+  auth.url: $aap_auth_url
+  domain:
+    management.url: $aap_domain_management_url
+    url: $aap_domain_url
+  pride.service:
+    uname: $aap_pride_user
+    pwd: $aap_pride_passwd
+jwt.certificate: $aap_jwt_cer
+
+#email properties
+spring.mail.host: smtp.ebi.ac.uk
+pride.support:
+  smtp.server: smtp.ebi.ac.uk
+  email.address: pride-support@ebi.ac.uk
+
+  # PRIDE urls for email sender
+pride:
+  url: https://www.ebi.ac.uk/pride
+  archive:
+    url: https://www.ebi.ac.uk/pride/archive
+    help.url: https://www.ebi.ac.uk/pride/help/archive
+    submission.url: https://www.ebi.ac.uk/pride/help/archive/submission
+    login.url: https://www.ebi.ac.uk/pride/archive/login
+
+## PRIDE archive private directory
+pride.prod.private.folder: $private_folder
