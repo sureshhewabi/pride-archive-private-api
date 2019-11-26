@@ -132,6 +132,7 @@ public class Transformer {
 
         return PrideProject.builder()
                 .accession(oracleProject.getAccession())
+                .title(oracleProject.getTitle())
                 .dataProcessingProtocol(oracleProject.getDataProcessingProtocol())
                 .sampleProcessingProtocol(oracleProject.getSampleProcessingProtocol())
                 .projectDescription(oracleProject.getProjectDescription())
