@@ -11,6 +11,7 @@ import org.springframework.web.client.RestTemplate;
 import uk.ac.ebi.pride.archive.repo.services.user.UserSummary;
 import uk.ac.ebi.pride.archive.repo.util.AAPConstants;
 import uk.ac.ebi.pride.ws.pride.models.user.ChangePassword;
+import uk.ac.ebi.tsc.aap.client.model.Profile;
 
 import java.nio.charset.Charset;
 import java.util.Collections;
@@ -158,5 +159,10 @@ public class AAPService {
             log.error(e.getMessage(),e);
             return false;
         }
+    }
+
+    public Profile getMyProfile(String token) {
+        ResponseEntity<Profile> responseEntity = restTemplate.exchange(aapAuthURL + "/my/profile", HttpMethod.GET, new HttpEntity(frameUserAuthToken(token)), Profile.class);
+        return responseEntity.getBody();
     }
 }

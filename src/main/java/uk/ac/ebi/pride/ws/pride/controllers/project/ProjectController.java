@@ -7,6 +7,7 @@ import org.springframework.core.io.Resource;
 import org.springframework.hateoas.PagedResources;
 import org.springframework.http.*;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import uk.ac.ebi.pride.archive.repo.repos.file.ProjectFile;
@@ -18,10 +19,14 @@ import uk.ac.ebi.pride.ws.pride.models.dataset.ProjectResource;
 import uk.ac.ebi.pride.ws.pride.models.file.PrideFileResource;
 import uk.ac.ebi.pride.ws.pride.service.project.FileStorageService;
 import uk.ac.ebi.pride.ws.pride.service.project.ProjectService;
+import uk.ac.ebi.pride.ws.pride.service.user.AAPService;
 import uk.ac.ebi.pride.ws.pride.utils.APIError;
 import uk.ac.ebi.pride.ws.pride.utils.WsContastants;
 import uk.ac.ebi.pride.ws.pride.utils.WsUtils;
+import uk.ac.ebi.tsc.aap.client.model.Profile;
 import uk.ac.ebi.tsc.aap.client.model.User;
+
+import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -42,12 +47,13 @@ public class ProjectController {
 
     final private ProjectService projectService;
     final private FileStorageService fileStorageService;
+    final private AAPService aapService;
 
     @Autowired
-    public ProjectController(ProjectService projectService, FileStorageService fileStorageService) {
+    public ProjectController(ProjectService projectService, FileStorageService fileStorageService, AAPService aapService) {
         this.projectService = projectService;
         this.fileStorageService = fileStorageService;
-
+        this.aapService = aapService;
     }
 
     @ApiOperation(notes = "List of Private PRIDE Archive Projects submitted by the user. User needs to be authenticated to view his private submissions",
@@ -167,7 +173,9 @@ public class ProjectController {
 
         List<ProjectFile> projectFiles = projectService.findProjectFiles(projectAccession);
 
-        ProjectFileResourceAssembler assembler = new ProjectFileResourceAssembler(projectAccession, ProjectController.class, PrideFileResource.class);
+        String token = aapService.getAAPToken();
+
+        ProjectFileResourceAssembler assembler = new ProjectFileResourceAssembler(token, projectAccession, ProjectController.class, PrideFileResource.class);
 
         List<PrideFileResource> resources = assembler.toResources(projectFiles);
 
@@ -190,24 +198,39 @@ public class ProjectController {
         return new HttpEntity<>(pagedResources);
     }
 
-
+    /**
+     * Todo: Token handling is not yet implemented.
+     * @param accession
+     * @param fileId
+     * @param token
+     * @return
+     */
 
     @ApiOperation(notes = "Get file private file", value = "projects", nickname = "getFileByProject", tags = {"projects"} )
     @ApiResponses({
             @ApiResponse(code = 200, message = "OK", response = APIError.class),
             @ApiResponse(code = 500, message = "Internal Server Error", response = APIError.class)
     })
-    @PreAuthorize("isAuthenticated()")
     @RequestMapping(value = "/projects/private/{projectId}/files/{fileId}", method = RequestMethod.GET,
             produces = {MediaType.APPLICATION_OCTET_STREAM_VALUE})
     public HttpEntity<Resource> getFileByProject(@PathVariable(value ="projectId") String accession,
-                                                                  @PathVariable(value="fileId") Long fileId){
+                                                 @PathVariable(value="fileId") Long fileId,
+                                                 @RequestParam(value="token", required = true) String token){
 
-         Optional<ProjectFile> projectFile = projectService.getFilePath(fileId);
-         String fileName = null;
-         if(projectFile.isPresent()){
-             fileName = accession + "/" + "submitted" + "/" + projectFile.get().getFileName();
-         }
+//        try{
+//            Profile auth = aapService.getMyProfile(token);
+//            if(auth == null){
+//                throw new AuthenticationCredentialsNotFoundException("The Token is not valid");
+//            }
+//        }catch (Exception e){
+//            throw new AuthenticationCredentialsNotFoundException("The Token is not valid");
+//        }
+
+        Optional<ProjectFile> projectFile = projectService.getFilePath(fileId);
+        String fileName = null;
+        if(projectFile.isPresent()){
+            fileName = accession + "/" + "submitted" + "/" + projectFile.get().getFileName();
+        }
 
         // Load file as Resource
         Resource resource = null;
