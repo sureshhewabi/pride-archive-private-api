@@ -19,10 +19,13 @@ import java.util.List;
 @Slf4j
 public class ProjectFileResourceAssembler extends ResourceAssemblerSupport<ProjectFile, PrideFileResource> {
 
+    String token;
+
     String accession;
-    public ProjectFileResourceAssembler(String projectAccession, Class<?> controller, Class<PrideFileResource> resourceType) {
+    public ProjectFileResourceAssembler(String token, String projectAccession, Class<?> controller, Class<PrideFileResource> resourceType) {
         super(controller, resourceType);
         this.accession = projectAccession;
+        this.token = token;
     }
 
     @Override
@@ -41,7 +44,7 @@ public class ProjectFileResourceAssembler extends ResourceAssemblerSupport<Proje
                         fileType.getFileType().getCv().getName(), fileType.getFileType().getCv().getValue()))
                 .build();
         List<Link> links = new ArrayList<>();
-        links.add(ControllerLinkBuilder.linkTo(ControllerLinkBuilder.methodOn(ProjectController.class).getFileByProject(this.accession, oracleFile.getId())).withSelfRel());
+        links.add(ControllerLinkBuilder.linkTo(ControllerLinkBuilder.methodOn(ProjectController.class).getFileByProject(this.accession, oracleFile.getId(), this.token)).withSelfRel());
         return new PrideFileResource(file, links);
     }
 
