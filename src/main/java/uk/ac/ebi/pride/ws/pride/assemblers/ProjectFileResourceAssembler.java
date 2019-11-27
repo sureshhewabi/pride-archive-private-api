@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.hateoas.Link;
 import org.springframework.hateoas.mvc.ControllerLinkBuilder;
 import org.springframework.hateoas.mvc.ResourceAssemblerSupport;
+import org.springframework.util.DigestUtils;
 import uk.ac.ebi.pride.archive.dataprovider.param.CvParam;
 import uk.ac.ebi.pride.archive.dataprovider.utils.MSFileTypeConstants;
 import uk.ac.ebi.pride.archive.repo.repos.file.ProjectFile;
@@ -20,8 +21,8 @@ import java.util.List;
 public class ProjectFileResourceAssembler extends ResourceAssemblerSupport<ProjectFile, PrideFileResource> {
 
     String token;
-
     String accession;
+
     public ProjectFileResourceAssembler(String token, String projectAccession, Class<?> controller, Class<PrideFileResource> resourceType) {
         super(controller, resourceType);
         this.accession = projectAccession;
@@ -36,6 +37,10 @@ public class ProjectFileResourceAssembler extends ResourceAssemblerSupport<Proje
             if(currentFileType.getFileType().getName().equalsIgnoreCase(oracleFile.getFileType().getName()))
                 fileType = currentFileType;
 
+        String fileName = accession + "/" + "submitted" + "/" + oracleFile.getFileName();
+
+
+        String md5 = DigestUtils.md5DigestAsHex((fileName + oracleFile.getId()).getBytes());
         PrideFile file = PrideFile.builder()
                 .accession(String.valueOf(oracleFile.getId()))
                 .fileName(oracleFile.getFileName())
@@ -44,7 +49,7 @@ public class ProjectFileResourceAssembler extends ResourceAssemblerSupport<Proje
                         fileType.getFileType().getCv().getName(), fileType.getFileType().getCv().getValue()))
                 .build();
         List<Link> links = new ArrayList<>();
-        links.add(ControllerLinkBuilder.linkTo(ControllerLinkBuilder.methodOn(ProjectController.class).getFileByProject(this.accession, oracleFile.getId(), this.token)).withSelfRel());
+        links.add(ControllerLinkBuilder.linkTo(ControllerLinkBuilder.methodOn(ProjectController.class).getFileByProject(this.accession, oracleFile.getId(), md5)).withRel("download"));
         return new PrideFileResource(file, links);
     }
 

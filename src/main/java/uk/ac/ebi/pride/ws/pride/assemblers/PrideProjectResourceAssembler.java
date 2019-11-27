@@ -56,51 +56,5 @@ public class PrideProjectResourceAssembler extends ResourceAssemblerSupport<Proj
         return projects;
     }
 
-//    /**
-//     * Transform the original mongo Project to {@link PrideProject} that is used to external users.
-//     * @param mongoPrideProject {@link MongoPrideProject}
-//     * @return Pride Project
-//     */
-//    public PrideProject transform(MongoPrideProject mongoPrideProject){
-//        return PrideProject.builder()
-//                .accession(mongoPrideProject.getAccession())
-//                .title(mongoPrideProject.getTitle())
-//                .references(new HashSet<>(mongoPrideProject.getCompleteReferences()))
-//                .projectDescription(mongoPrideProject.getDescription())
-//                .projectTags(mongoPrideProject.getProjectTags())
-//                .additionalAttributes(mongoPrideProject.getAttributes())
-//                .affiliations(mongoPrideProject.getAllAffiliations())
-//                .identifiedPTMStrings(new HashSet<>(mongoPrideProject.getPtmList()))
-//                .sampleProcessingProtocol(mongoPrideProject.getSampleProcessingProtocol())
-//                .dataProcessingProtocol(mongoPrideProject.getDataProcessingProtocol())
-//                .countries(mongoPrideProject.getCountries() != null ? new HashSet<>(mongoPrideProject.getCountries()) : Collections.EMPTY_SET)
-//                .keywords(mongoPrideProject.getKeywords())
-//                .doi(mongoPrideProject.getDoi().isPresent()?mongoPrideProject.getDoi().get():null)
-//                .publicationDate(mongoPrideProject.getPublicationDate())
-//                .submissionDate(mongoPrideProject.getSubmissionDate())
-//                .instruments(new ArrayList<>(mongoPrideProject.getInstrumentsCvParams()))
-//                .quantificationMethods(new ArrayList<>(mongoPrideProject.getQuantificationParams()))
-//                .softwares(new ArrayList<>(mongoPrideProject.getSoftwareParams()))
-//                .submitters(new ArrayList<>(mongoPrideProject.getSubmittersContacts()))
-//                .labPIs(new ArrayList<>(mongoPrideProject.getLabHeadContacts()))
-//                .organisms(getCvTermsValues(mongoPrideProject.getSamplesDescription(), CvTermReference.EFO_ORGANISM))
-//                .diseases(getCvTermsValues(mongoPrideProject.getSamplesDescription(), CvTermReference.EFO_DISEASE))
-//                .organismParts(getCvTermsValues(mongoPrideProject.getSamplesDescription(), CvTermReference.EFO_ORGANISM_PART))
-//                .sampleAttributes(mongoPrideProject.getSampleAttributes() !=null? new ArrayList(mongoPrideProject.getSampleAttributes()): Collections.emptyList())
-//                .build();
-//    }
-//
-//    private Collection<CvParamProvider> getCvTermsValues(List<Tuple<CvParam, Set<CvParam>>> samplesDescription, CvTermReference efoTerm) {
-//        Set<CvParamProvider> resultTerms = new HashSet<>();
-//        samplesDescription.stream()
-//                .filter(x -> x.getKey().getAccession().equalsIgnoreCase(efoTerm.getAccession()))
-//                .forEach( y-> y.getValue().forEach(z-> resultTerms.add( new CvParam(z.getCvLabel(), z.getAccession(), StringUtils.convertSentenceStyle(z.getName()), z.getValue()))));
-//        return resultTerms;
-//    }
-
-
-
-
-
 
 }

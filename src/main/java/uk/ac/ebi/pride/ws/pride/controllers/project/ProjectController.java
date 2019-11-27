@@ -9,6 +9,7 @@ import org.springframework.http.*;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
 import org.springframework.security.core.Authentication;
+import org.springframework.util.DigestUtils;
 import org.springframework.web.bind.annotation.*;
 import uk.ac.ebi.pride.archive.repo.repos.file.ProjectFile;
 import uk.ac.ebi.pride.archive.repo.repos.project.Project;
@@ -215,21 +216,19 @@ public class ProjectController {
             produces = {MediaType.APPLICATION_OCTET_STREAM_VALUE})
     public HttpEntity<Resource> getFileByProject(@PathVariable(value ="projectId") String accession,
                                                  @PathVariable(value="fileId") Long fileId,
-                                                 @RequestParam(value="token", required = true) String token){
-
-//        try{
-//            Profile auth = aapService.getMyProfile(token);
-//            if(auth == null){
-//                throw new AuthenticationCredentialsNotFoundException("The Token is not valid");
-//            }
-//        }catch (Exception e){
-//            throw new AuthenticationCredentialsNotFoundException("The Token is not valid");
-//        }
+                                                 @RequestParam(value="token", required = true) String token)  {
 
         Optional<ProjectFile> projectFile = projectService.getFilePath(fileId);
+
         String fileName = null;
         if(projectFile.isPresent()){
             fileName = accession + "/" + "submitted" + "/" + projectFile.get().getFileName();
+        }
+
+        String sha3_256hex = DigestUtils.md5DigestAsHex((fileName + fileId).getBytes());
+        if(!sha3_256hex.equalsIgnoreCase(token)){
+            return ResponseEntity.
+                    status(HttpStatus.BAD_REQUEST).body(null);
         }
 
         // Load file as Resource
