@@ -21,12 +21,6 @@ public class FileStorageService {
     public FileStorageService(FileStorageProperties fileStorageProperties) throws Exception {
         this.fileStorageLocation = Paths.get(fileStorageProperties.getFileDir())
                 .toAbsolutePath().normalize();
-
-        try {
-            Files.createDirectories(this.fileStorageLocation);
-        } catch (Exception ex) {
-            throw new Exception("Could not create the directory where the uploaded files will be stored.", ex);
-        }
     }
 
     public Resource loadFileAsResource(String fileName) throws Exception {
