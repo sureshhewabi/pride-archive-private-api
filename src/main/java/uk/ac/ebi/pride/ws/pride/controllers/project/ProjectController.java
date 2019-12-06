@@ -28,6 +28,7 @@ import uk.ac.ebi.tsc.aap.client.model.Profile;
 import uk.ac.ebi.tsc.aap.client.model.User;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -101,12 +102,16 @@ public class ProjectController {
             @ApiResponse(code = 500, message = "Internal Server Error", response = APIError.class)})
     @PreAuthorize("isAuthenticated()")
     @RequestMapping(value = "/projects/{accession}", method = RequestMethod.GET, produces = {MediaType.APPLICATION_JSON_VALUE})
-    public ResponseEntity<Object> getPrivateProject( Authentication authentication,
-                                                      @PathVariable(value ="accession") String projectAccession) {
+    public ResponseEntity<Object> getPrivateProject(Authentication authentication,
+                                                    @PathVariable(value ="accession") String projectAccession) {
 
         User currentUser = (User) (authentication).getDetails();
-        List<Project> projectsList = projectService.findReviewerProjects(currentUser.getUserReference());
-        Optional<Project> privateProject = projectsList.stream().filter(project -> project.getAccession().equals(projectAccession)).findFirst();
+        List<Project> projectsReviewerList = projectService.findReviewerProjects(currentUser.getUserReference());
+        List<Project> projectList = projectService.findUserProjects(currentUser.getUserReference(), false);
+        if(projectList == null)
+            projectList = new ArrayList<>();
+        projectList.addAll(projectsReviewerList);
+        Optional<Project> privateProject = projectList.stream().filter(project -> project.getAccession().equals(projectAccession)).findFirst();
 
         PrideProjectResourceAssembler assembler = new PrideProjectResourceAssembler(authentication, ProjectController.class, ProjectResource.class);
         return privateProject.<ResponseEntity<Object>>map(oracleProject -> new ResponseEntity<>(assembler.toResource(oracleProject), HttpStatus.OK))
