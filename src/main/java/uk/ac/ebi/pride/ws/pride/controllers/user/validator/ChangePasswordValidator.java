@@ -49,9 +49,9 @@ public class ChangePasswordValidator extends UserSummaryValidator {
             }
 
             // check old password is correct
-            String email = changePassword.getEmail();
-            UserSummary originalUser = userServiceImpl.findByEmail(email);
-            validateMatchingExistingPassword(originalUser.getPassword(), changePassword.getOldPassword(), errors);
+//            String email = changePassword.getEmail();
+//            UserSummary originalUser = userServiceImpl.findByEmail(email);
+//            validateMatchingExistingPassword(originalUser.getPassword(), changePassword.getOldPassword(), errors);
         }
     }
 
