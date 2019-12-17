@@ -160,7 +160,7 @@ public class ProjectController {
     }
 
     @ApiOperation(notes = "To publish private PRIDE Archive Project submitted by another user",
-            value = "publish others private project", nickname = "publishPrivateProject", tags = {"projects"})
+            value = "publish others private project", nickname = "publishOtherPrivateProject", tags = {"projects"})
     @ApiResponses({
             @ApiResponse(code = 200, message = "OK", response = APIError.class),
             @ApiResponse(code = 500, message = "Internal Server Error", response = APIError.class)})

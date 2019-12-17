@@ -103,6 +103,12 @@ public class UserProfileService {
         boolean isModified=false;
         boolean isAAPUpdateRequired=false;
 
+        if(!oldUserSumary.getAcceptedTermsOfUse().equals(updateUser.getAcceptedTermsOfUse())){
+            oldUserSumary.setAcceptedTermsOfUse(updateUser.getAcceptedTermsOfUse());
+            oldUserSumary.setAcceptedTermsOfUseAt(Calendar.getInstance().getTime());
+            isModified=true;
+        }
+
         if(!oldUserSumary.getTitle().getTitle().equalsIgnoreCase(updateUser.getTitle().getTitle())){
             oldUserSumary.setTitle(updateUser.getTitle());
             isModified=true;
