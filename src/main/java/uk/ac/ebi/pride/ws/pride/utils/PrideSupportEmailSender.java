@@ -16,7 +16,9 @@ import uk.ac.ebi.pride.archive.repo.services.user.UserSummary;
 import uk.ac.ebi.pride.ws.pride.models.feedback.Feedback;
 import uk.ac.ebi.pride.ws.pride.models.user.PublishProject;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 
 @Component
 public class PrideSupportEmailSender {
@@ -51,7 +53,7 @@ public class PrideSupportEmailSender {
     public static final String REFERNCE_LINE_PLACE_HOLDER = "[REFLINE]";
     public static final String USER_STRING = "[USER_STRING]";
     public static final String REASON_LINE_PLACE_HOLDER = "[REASON]";
-    public static final String NOT_AVAILABLE= "Not available";
+    public static final String NOT_AVAILABLE = "Not available";
 
     @Autowired
     private JavaMailSender mailSender;
@@ -173,12 +175,7 @@ public class PrideSupportEmailSender {
         }
         emailBody = emailBody.replace(USER_STRING, userString);
 
-        try {
-            sendEmail(new String[]{prideSupportEmailAddress}, PUBLISH_PROJECT_EMAIL_TITLE, emailBody);
-        } catch (MailException ex) {
-            String message = "Failed to send publish project email on: " + projectAccession;
-            logger.error(message, ex);
-        }
+        sendEmail(new String[]{prideSupportEmailAddress}, PUBLISH_PROJECT_EMAIL_TITLE, emailBody);
     }
 
     public void sendRegistrationEmail(User user, String password, String emailTemplate) {
@@ -224,14 +221,19 @@ public class PrideSupportEmailSender {
     private ResourceLoader resourceLoader;
 
     @Bean("registrationEmailTemplate")
-    public String getRegistrationEmailTemplate() throws IOException{
-        Resource emailTemplateResource =  resourceLoader.getResource("classpath:email-template/registration.template");
+    public String getRegistrationEmailTemplate() throws IOException {
+        Resource emailTemplateResource = resourceLoader.getResource("classpath:email-template/registration.template");
         return getEmailTemplate(emailTemplateResource);
     }
 
     @Bean("passwordChangeEmailTemplate")
-    public String getChangePwdEmailTemplate() throws IOException{
-        Resource emailTemplateResource =  resourceLoader.getResource("classpath:email-template/password-change.template");
+    public String getChangePwdEmailTemplate() throws IOException {
+        Resource emailTemplateResource = resourceLoader.getResource("classpath:email-template/password-change.template");
+        return getEmailTemplate(emailTemplateResource);
+    }
+
+    public String getpublishProjectEmailTemplate() throws IOException {
+        Resource emailTemplateResource = resourceLoader.getResource("classpath:email-template/publish-project.template");
         return getEmailTemplate(emailTemplateResource);
     }
 }

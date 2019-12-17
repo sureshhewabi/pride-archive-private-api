@@ -1,13 +1,14 @@
 package uk.ac.ebi.pride.ws.pride.controllers.project;
 
-import io.swagger.annotations.*;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.hateoas.PagedResources;
 import org.springframework.http.*;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
 import org.springframework.security.core.Authentication;
 import org.springframework.util.DigestUtils;
 import org.springframework.web.bind.annotation.*;
@@ -18,16 +19,17 @@ import uk.ac.ebi.pride.ws.pride.assemblers.PrideProjectResourceAssembler;
 import uk.ac.ebi.pride.ws.pride.assemblers.ProjectFileResourceAssembler;
 import uk.ac.ebi.pride.ws.pride.models.dataset.ProjectResource;
 import uk.ac.ebi.pride.ws.pride.models.file.PrideFileResource;
+import uk.ac.ebi.pride.ws.pride.models.user.PublishProject;
+import uk.ac.ebi.pride.ws.pride.models.user.PublishProjectRequest;
 import uk.ac.ebi.pride.ws.pride.service.project.FileStorageService;
 import uk.ac.ebi.pride.ws.pride.service.project.ProjectService;
 import uk.ac.ebi.pride.ws.pride.service.user.AAPService;
 import uk.ac.ebi.pride.ws.pride.utils.APIError;
+import uk.ac.ebi.pride.ws.pride.utils.PrideSupportEmailSender;
 import uk.ac.ebi.pride.ws.pride.utils.WsContastants;
 import uk.ac.ebi.pride.ws.pride.utils.WsUtils;
-import uk.ac.ebi.tsc.aap.client.model.Profile;
 import uk.ac.ebi.tsc.aap.client.model.User;
 
-import javax.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -50,28 +52,30 @@ public class ProjectController {
     final private ProjectService projectService;
     final private FileStorageService fileStorageService;
     final private AAPService aapService;
+    private final PrideSupportEmailSender prideSupportEmailSender;
 
     @Autowired
-    public ProjectController(ProjectService projectService, FileStorageService fileStorageService, AAPService aapService) {
+    public ProjectController(ProjectService projectService, FileStorageService fileStorageService, AAPService aapService, PrideSupportEmailSender prideSupportEmailSender) {
         this.projectService = projectService;
         this.fileStorageService = fileStorageService;
         this.aapService = aapService;
+        this.prideSupportEmailSender = prideSupportEmailSender;
     }
 
     @ApiOperation(notes = "List of Private PRIDE Archive Projects submitted by the user. User needs to be authenticated to view his private submissions",
-            value = "my submissions", nickname = "getMySubmissions", tags = {"projects"} )
+            value = "my submissions", nickname = "getMySubmissions", tags = {"projects"})
     @ApiResponses({
             @ApiResponse(code = 200, message = "OK", response = APIError.class),
             @ApiResponse(code = 500, message = "Internal Server Error", response = APIError.class)})
     @PreAuthorize("isAuthenticated()")
     @RequestMapping(value = "/projects/private-submissions", method = RequestMethod.GET, produces = {MediaType.APPLICATION_JSON_VALUE})
     public HttpEntity<PagedResources> getPrivateProjects(Authentication authentication,
-                                                            @RequestParam(value="pageSize", defaultValue = "100", required = false) int pageSize,
-                                                            @RequestParam(value="page", defaultValue = "0" ,  required = false) int page) {
+                                                         @RequestParam(value = "pageSize", defaultValue = "100", required = false) int pageSize,
+                                                         @RequestParam(value = "page", defaultValue = "0", required = false) int page) {
 
         User currentUser = (User) (authentication).getDetails();
 
-        List<Project> projectsList = projectService.findUserProjects(currentUser.getUserReference(),false);
+        List<Project> projectsList = projectService.findUserProjects(currentUser.getUserReference(), false);
         PrideProjectResourceAssembler assembler = new PrideProjectResourceAssembler(authentication, ProjectController.class, ProjectResource.class);
         projectsList = projectsList.stream().filter(project -> !project.isPublicProject()).collect(Collectors.toList());
         List<ProjectResource> resources = assembler.toResources(projectsList);
@@ -84,31 +88,31 @@ public class ProjectController {
                 linkTo(methodOn(ProjectController.class).getReviewerProjects(authentication, pageSize, page)).withSelfRel(),
                 linkTo(methodOn(ProjectController.class).getReviewerProjects(authentication, pageSize, (int) WsUtils.validatePage(page + 1, totalPages)))
                         .withRel(WsContastants.HateoasEnum.next.name()),
-                linkTo(methodOn(ProjectController.class).getReviewerProjects( authentication, pageSize, (int) WsUtils.validatePage(page - 1, totalPages)))
+                linkTo(methodOn(ProjectController.class).getReviewerProjects(authentication, pageSize, (int) WsUtils.validatePage(page - 1, totalPages)))
                         .withRel(WsContastants.HateoasEnum.previous.name()),
                 linkTo(methodOn(ProjectController.class).getReviewerProjects(authentication, pageSize, 0))
                         .withRel(WsContastants.HateoasEnum.first.name()),
                 linkTo(methodOn(ProjectController.class).getReviewerProjects(authentication, pageSize, (int) totalPages))
                         .withRel(WsContastants.HateoasEnum.last.name())
-        ) ;
+        );
 
         return new HttpEntity<>(pagedResources);
     }
 
     @ApiOperation(notes = "Private PRIDE Archive Project submitted by the user which is under review of the reviewer. User needs to be authenticated to view his private submissions",
-            value = "reviewer view private submission", nickname = "getPrivateProjectForReviewer", tags = {"projects"} )
+            value = "reviewer view private submission", nickname = "getPrivateProjectForReviewer", tags = {"projects"})
     @ApiResponses({
             @ApiResponse(code = 200, message = "OK", response = APIError.class),
             @ApiResponse(code = 500, message = "Internal Server Error", response = APIError.class)})
     @PreAuthorize("isAuthenticated()")
     @RequestMapping(value = "/projects/{accession}", method = RequestMethod.GET, produces = {MediaType.APPLICATION_JSON_VALUE})
     public ResponseEntity<Object> getPrivateProject(Authentication authentication,
-                                                    @PathVariable(value ="accession") String projectAccession) {
+                                                    @PathVariable(value = "accession") String projectAccession) {
 
         User currentUser = (User) (authentication).getDetails();
         List<Project> projectsReviewerList = projectService.findReviewerProjects(currentUser.getUserReference());
         List<Project> projectList = projectService.findUserProjects(currentUser.getUserReference(), false);
-        if(projectList == null)
+        if (projectList == null)
             projectList = new ArrayList<>();
         projectList.addAll(projectsReviewerList);
         Optional<Project> privateProject = projectList.stream().filter(project -> project.getAccession().equals(projectAccession)).findFirst();
@@ -119,16 +123,77 @@ public class ProjectController {
 
     }
 
+    @ApiOperation(notes = "To publish private PRIDE Archive Project submitted by the user. User needs to be authenticated to publish his private submissions",
+            value = "publish private project", nickname = "publishPrivateProject", tags = {"projects"})
+    @ApiResponses({
+            @ApiResponse(code = 200, message = "OK", response = APIError.class),
+            @ApiResponse(code = 500, message = "Internal Server Error", response = APIError.class)})
+    @PreAuthorize("isAuthenticated()")
+    @RequestMapping(value = "/projects/publish/{accession}", method = RequestMethod.POST, produces = {MediaType.APPLICATION_JSON_VALUE})
+    public ResponseEntity<Object> publishPrivateProject(Authentication authentication,
+                                                        @PathVariable(value = "accession") String projectAccession,
+                                                        @RequestBody PublishProjectRequest publishProjectRequest) {
+
+        User currentUser = (User) (authentication).getDetails();
+        List<Project> projectList = projectService.findUserProjects(currentUser.getUserReference(), false);
+        if (projectList == null)
+            projectList = new ArrayList<>();
+        Optional<Project> privateProject = projectList.stream().filter(project -> project.getAccession().equals(projectAccession)).findFirst();
+
+        if (!privateProject.isPresent()) {
+            return new ResponseEntity<>(WsContastants.PX_PROJECT_NOT_FOUND + projectAccession + WsContastants.CONTACT_PRIDE, new HttpHeaders(), HttpStatus.BAD_REQUEST);
+        }
+
+        PublishProject publishProject = PublishProject.builder().pubmedId(publishProjectRequest.getPubmedId())
+                .doi(publishProjectRequest.getDoi())
+                .referenceLine(publishProjectRequest.getReferenceLine())
+                .publishJustification(publishProjectRequest.getPublishJustification())
+                .authorized(true).userName(currentUser.getEmail()).build();
+        try {
+            prideSupportEmailSender.sendPublishProjectEmail(publishProject, projectAccession, prideSupportEmailSender.getpublishProjectEmailTemplate());
+        } catch (Exception ex) {
+            String message = "Failed to send publish project email on: " + projectAccession;
+            log.error(message, ex);
+            return new ResponseEntity<>(WsContastants.PUBLISH_PROJECT_NOK, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+        return new ResponseEntity<>(WsContastants.PUBLISH_PROJECT_OK, HttpStatus.OK);
+    }
+
+    @ApiOperation(notes = "To publish private PRIDE Archive Project submitted by another user",
+            value = "publish others private project", nickname = "publishPrivateProject", tags = {"projects"})
+    @ApiResponses({
+            @ApiResponse(code = 200, message = "OK", response = APIError.class),
+            @ApiResponse(code = 500, message = "Internal Server Error", response = APIError.class)})
+    @RequestMapping(value = "/projects/publishother/{accession}", method = RequestMethod.POST, produces = {MediaType.APPLICATION_JSON_VALUE})
+    public ResponseEntity<Object> publishOthersPrivateProject(
+            @PathVariable(value = "accession") String projectAccession,
+            @RequestBody PublishProjectRequest publishProjectRequest) {
+
+        PublishProject publishProject = PublishProject.builder().pubmedId(publishProjectRequest.getPubmedId())
+                .doi(publishProjectRequest.getDoi())
+                .referenceLine(publishProjectRequest.getReferenceLine())
+                .publishJustification(publishProjectRequest.getPublishJustification())
+                .authorized(false).userName("anonymousUser").build();
+        try {
+            prideSupportEmailSender.sendPublishProjectEmail(publishProject, projectAccession, prideSupportEmailSender.getpublishProjectEmailTemplate());
+        } catch (Exception ex) {
+            String message = "Failed to send publish project email on: " + projectAccession;
+            log.error(message, ex);
+            return new ResponseEntity<>(WsContastants.PUBLISH_PROJECT_NOK, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+        return new ResponseEntity<>(WsContastants.PUBLISH_PROJECT_OK, HttpStatus.OK);
+    }
+
     @ApiOperation(notes = "List of PRIDE Archive Projects accessible to reviewer. User needs to be authenticated to view these submissions",
-            value = "reviewer projects", nickname = "getReviewerSubmissions", tags = {"projects"} )
+            value = "reviewer projects", nickname = "getReviewerSubmissions", tags = {"projects"})
     @ApiResponses({
             @ApiResponse(code = 200, message = "OK", response = APIError.class),
             @ApiResponse(code = 500, message = "Internal Server Error", response = APIError.class)})
     @PreAuthorize("isAuthenticated()")
     @RequestMapping(value = "projects/reviewer-submissions", method = RequestMethod.GET, produces = {MediaType.APPLICATION_JSON_VALUE})
     public HttpEntity<PagedResources> getReviewerProjects(Authentication authentication,
-                                                                  @RequestParam(value="pageSize", defaultValue = "100", required = false) int pageSize,
-                                                                  @RequestParam(value="page", defaultValue = "0" ,  required = false) int page) {
+                                                          @RequestParam(value = "pageSize", defaultValue = "100", required = false) int pageSize,
+                                                          @RequestParam(value = "page", defaultValue = "0", required = false) int page) {
         User currentUser = (User) (authentication).getDetails();
         List<Project> projectsList = projectService.findReviewerProjects(currentUser.getUserReference());
 
@@ -146,13 +211,13 @@ public class ProjectController {
                 linkTo(methodOn(ProjectController.class).getReviewerProjects(authentication, pageSize, page)).withSelfRel(),
                 linkTo(methodOn(ProjectController.class).getReviewerProjects(authentication, pageSize, (int) WsUtils.validatePage(page + 1, totalPages)))
                         .withRel(WsContastants.HateoasEnum.next.name()),
-                linkTo(methodOn(ProjectController.class).getReviewerProjects( authentication, pageSize, (int) WsUtils.validatePage(page - 1, totalPages)))
+                linkTo(methodOn(ProjectController.class).getReviewerProjects(authentication, pageSize, (int) WsUtils.validatePage(page - 1, totalPages)))
                         .withRel(WsContastants.HateoasEnum.previous.name()),
                 linkTo(methodOn(ProjectController.class).getReviewerProjects(authentication, pageSize, 0))
                         .withRel(WsContastants.HateoasEnum.first.name()),
                 linkTo(methodOn(ProjectController.class).getReviewerProjects(authentication, pageSize, (int) totalPages))
                         .withRel(WsContastants.HateoasEnum.last.name())
-        ) ;
+        );
 
         return new HttpEntity<>(pagedResources);
 
@@ -161,7 +226,7 @@ public class ProjectController {
 //        return ResponseEntity.ok().body(privateProjectsList);
     }
 
-    @ApiOperation(notes = "Get all the Files for an specific private project in PRIDE.", value = "projects", nickname = "getFilesByProject", tags = {"projects"} )
+    @ApiOperation(notes = "Get all the Files for an specific private project in PRIDE.", value = "projects", nickname = "getFilesByProject", tags = {"projects"})
     @ApiResponses({
             @ApiResponse(code = 200, message = "OK", response = APIError.class),
             @ApiResponse(code = 500, message = "Internal Server Error", response = APIError.class)
@@ -169,15 +234,24 @@ public class ProjectController {
     @PreAuthorize("isAuthenticated()")
     @RequestMapping(value = "/projects/{accession}/files", method = RequestMethod.GET, produces = {MediaType.APPLICATION_JSON_VALUE})
     public HttpEntity<PagedResources<PrideFileResource>> getFilesByProject(Authentication authentication,
-                                                                           @PathVariable(value ="accession") String projectAccession,
-                                                                           @RequestParam(value="pageSize", defaultValue = "100", required = false) int pageSize,
-                                                                           @RequestParam(value="page", defaultValue = "0" ,  required = false) int page){
+                                                                           @PathVariable(value = "accession") String projectAccession,
+                                                                           @RequestParam(value = "pageSize", defaultValue = "100", required = false) int pageSize,
+                                                                           @RequestParam(value = "page", defaultValue = "0", required = false) int page) {
 
         Tuple<Integer, Integer> pageParams = WsUtils.validatePageLimit(page, pageSize);
         page = pageParams.getKey();
         pageSize = pageParams.getValue();
 
-        List<ProjectFile> projectFiles = projectService.findProjectFiles(projectAccession);
+        User currentUser = (User) (authentication).getDetails();
+        List<Project> projectsReviewerList = projectService.findReviewerProjects(currentUser.getUserReference());
+        List<Project> projectList = projectService.findUserProjects(currentUser.getUserReference(), false);
+        if (projectList == null)
+            projectList = new ArrayList<>();
+
+        projectList.addAll(projectsReviewerList);
+        Optional<Project> privateProject = projectList.stream().filter(project -> project.getAccession().equals(projectAccession)).findFirst();
+
+        List<ProjectFile> projectFiles = privateProject.isPresent() ? projectService.findProjectFiles(projectAccession) : new ArrayList<>();
 
         String token = aapService.getAAPToken();
 
@@ -193,45 +267,46 @@ public class ProjectController {
                 linkTo(methodOn(ProjectController.class).getFilesByProject(authentication, projectAccession, pageSize, page)).withSelfRel(),
                 linkTo(methodOn(ProjectController.class).getFilesByProject(authentication, projectAccession, pageSize, (int) WsUtils.validatePage(page + 1, totalPages)))
                         .withRel(WsContastants.HateoasEnum.next.name()),
-                linkTo(methodOn(ProjectController.class).getFilesByProject(authentication, projectAccession,pageSize, (int) WsUtils.validatePage(page - 1, totalPages)))
+                linkTo(methodOn(ProjectController.class).getFilesByProject(authentication, projectAccession, pageSize, (int) WsUtils.validatePage(page - 1, totalPages)))
                         .withRel(WsContastants.HateoasEnum.previous.name()),
-                linkTo(methodOn(ProjectController.class).getFilesByProject(authentication, projectAccession,pageSize, 0))
+                linkTo(methodOn(ProjectController.class).getFilesByProject(authentication, projectAccession, pageSize, 0))
                         .withRel(WsContastants.HateoasEnum.first.name()),
                 linkTo(methodOn(ProjectController.class).getFilesByProject(authentication, projectAccession, pageSize, (int) totalPages))
                         .withRel(WsContastants.HateoasEnum.last.name())
-        ) ;
+        );
 
         return new HttpEntity<>(pagedResources);
     }
 
     /**
      * Todo: Token handling is not yet implemented.
+     *
      * @param accession
      * @param fileId
      * @param token
      * @return
      */
 
-    @ApiOperation(notes = "Get file private file", value = "projects", nickname = "getFileByProject", tags = {"projects"} )
+    @ApiOperation(notes = "Get file private file", value = "projects", nickname = "getFileByProject", tags = {"projects"})
     @ApiResponses({
             @ApiResponse(code = 200, message = "OK", response = APIError.class),
             @ApiResponse(code = 500, message = "Internal Server Error", response = APIError.class)
     })
     @RequestMapping(value = "/projects/private/{projectId}/files/{fileId}", method = RequestMethod.GET,
             produces = {MediaType.APPLICATION_OCTET_STREAM_VALUE})
-    public HttpEntity<Resource> getFileByProject(@PathVariable(value ="projectId") String accession,
-                                                 @PathVariable(value="fileId") Long fileId,
-                                                 @RequestParam(value="token", required = true) String token)  {
+    public HttpEntity<Resource> getFileByProject(@PathVariable(value = "projectId") String accession,
+                                                 @PathVariable(value = "fileId") Long fileId,
+                                                 @RequestParam(value = "token", required = true) String token) {
 
         Optional<ProjectFile> projectFile = projectService.getFilePath(fileId);
 
         String fileName = null;
-        if(projectFile.isPresent()){
+        if (projectFile.isPresent()) {
             fileName = accession + "/" + "submitted" + "/" + projectFile.get().getFileName();
         }
 
         String sha3_256hex = DigestUtils.md5DigestAsHex((fileName + fileId).getBytes());
-        if(!sha3_256hex.equalsIgnoreCase(token)){
+        if (!sha3_256hex.equalsIgnoreCase(token)) {
             return ResponseEntity.
                     status(HttpStatus.BAD_REQUEST).body(null);
         }

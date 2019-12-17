@@ -1,61 +1,25 @@
 package uk.ac.ebi.pride.ws.pride.models.user;
 
-public class PublishProject {
-    private String pubmedId;
-    private String doi;
-    private String referenceLine;
-    private String publishJustification;
+import lombok.Builder;
+
+public class PublishProject extends PublishProjectRequest{
     private String userName;
     private boolean authorized;
 
-    public PublishProject() {
-    }
+    @Builder
+    private PublishProject(String pubmedId, String doi, String referenceLine, String publishJustification,
+                           String userName, boolean authorized){
 
-    public String getPubmedId() {
-        return pubmedId;
-    }
-
-    public void setPubmedId(String pubmedId) {
-        this.pubmedId = pubmedId;
-    }
-
-    public String getDoi() {
-        return doi;
-    }
-
-    public void setDoi(String doi) {
-        this.doi = doi;
-    }
-
-    public String getReferenceLine() {
-        return referenceLine;
-    }
-
-    public void setReferenceLine(String referenceLine) {
-        this.referenceLine = referenceLine;
-    }
-
-    public String getPublishJustification() {
-        return publishJustification;
-    }
-
-    public void setPublishJustification(String publishJustification) {
-        this.publishJustification = publishJustification;
+        super(pubmedId, doi, referenceLine, publishJustification);
+        this.userName = userName;
+        this.authorized = authorized;
     }
 
     public String getUserName() {
         return userName;
     }
 
-    public void setUserName(String userName) {
-        this.userName = userName;
-    }
-
     public boolean isAuthorized() {
         return authorized;
-    }
-
-    public void setAuthorized(boolean authorized) {
-        this.authorized = authorized;
     }
 }

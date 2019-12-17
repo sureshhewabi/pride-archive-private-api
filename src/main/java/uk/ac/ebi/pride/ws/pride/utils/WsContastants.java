@@ -67,4 +67,6 @@ public class WsContastants {
     public static final String PEPTIDE_USI_NOT_FOUND = "The peptide evidence accession is not in the database --";
     public static String CONTACT_PRIDE = " Contact pride support: pride-support@ebi.ac.uk";
     public static String AAP_TOKEN_MISMATCH_ERROR = "Authorization Token is invalid";
+    public static String PUBLISH_PROJECT_OK = "Your request to publish the project has been sent to PRIDE support team ";
+    public static String PUBLISH_PROJECT_NOK = "Failed to send publish project request to PRIDE support team : pride-support@ebi.ac.uk";
 }
