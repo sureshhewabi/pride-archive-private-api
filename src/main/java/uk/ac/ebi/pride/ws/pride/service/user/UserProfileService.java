@@ -137,7 +137,7 @@ public class UserProfileService {
             isModified = true;
         }
 
-        if (isModified(updateUser.getOrcid(), updateUser.getOrcid())) {
+        if (isModified(oldUserSumary.getOrcid(), updateUser.getOrcid())) {
             oldUserSumary.setOrcid(updateUser.getOrcid());
             isModified = true;
         }
