@@ -60,13 +60,13 @@ public class UserProfileService {
 
         //Add user to submitter domain in AAP
         log.info("Begin user domain registeration");
-        if(user.getUserRef()!=null) {
+        if (user.getUserRef() != null) {
             boolean isDomainRegSuccessful = aapService.addUserToAAPDomain(user.getUserRef(), AAPConstants.PRIDE_SUBMITTER_DOMAIN);
-            if(!isDomainRegSuccessful){
-                log.error("Error adding user to submitter domain in AAP:"+user.getEmail());
+            if (!isDomainRegSuccessful) {
+                log.error("Error adding user to submitter domain in AAP:" + user.getEmail());
             }
-        }else{
-            log.error("Error creating user and getting user ref for email:"+user.getEmail());
+        } else {
+            log.error("Error creating user and getting user ref for email:" + user.getEmail());
         }
 
         // send registration success email
@@ -81,8 +81,8 @@ public class UserProfileService {
         User user = userRepository.findByUserRef(userReference);
         user.setPassword(changePassword.getNewPassword());
         //update in aap
-        boolean isChangeSuccessful = aapService.changeAAPPassword(userReference,changePassword);
-        if(isChangeSuccessful) {
+        boolean isChangeSuccessful = aapService.changeAAPPassword(userReference, changePassword);
+        if (isChangeSuccessful) {
             //update in pride
             user = userRepository.save(user);
             UserSummary userSummary = new UserSummary();
@@ -91,7 +91,7 @@ public class UserProfileService {
             userSummary.setLastName(user.getLastName());
             userSummary.setPassword(user.getPassword());
             prideSupportEmailSender.sendPasswordChangeEmail(userSummary, passwordChangeEmailTemplate);
-        }else{
+        } else {
             throw new Exception("Failed to update pwd in AAP");
         }
     }
@@ -100,57 +100,57 @@ public class UserProfileService {
         User currentUser = userRepository.findByEmail(currentUserEmail);
         UserSummary oldUserSumary = ObjectMapper.mapUserToUserSummary(currentUser);
         //check if fields have been modified
-        boolean isModified=false;
-        boolean isAAPUpdateRequired=false;
+        boolean isModified = false;
+        boolean isAAPUpdateRequired = false;
 
-        if(!oldUserSumary.getAcceptedTermsOfUse().equals(updateUser.getAcceptedTermsOfUse())){
+        if (isModified(oldUserSumary.getAcceptedTermsOfUse(), updateUser.getAcceptedTermsOfUse())) {
             oldUserSumary.setAcceptedTermsOfUse(updateUser.getAcceptedTermsOfUse());
             oldUserSumary.setAcceptedTermsOfUseAt(Calendar.getInstance().getTime());
-            isModified=true;
+            isModified = true;
         }
 
-        if(!oldUserSumary.getTitle().getTitle().equalsIgnoreCase(updateUser.getTitle().getTitle())){
+        if (!oldUserSumary.getTitle().getTitle().equalsIgnoreCase(updateUser.getTitle().getTitle())) {
             oldUserSumary.setTitle(updateUser.getTitle());
-            isModified=true;
+            isModified = true;
         }
 
-        if(!oldUserSumary.getFirstName().equals(updateUser.getFirstName())){
+        if (isModified(oldUserSumary.getFirstName(), updateUser.getFirstName())) {
             oldUserSumary.setFirstName(updateUser.getFirstName());
-            isAAPUpdateRequired=true;
-            isModified=true;
+            isAAPUpdateRequired = true;
+            isModified = true;
         }
 
-        if(!oldUserSumary.getLastName().equals(updateUser.getLastName())){
+        if (isModified(oldUserSumary.getLastName(), updateUser.getLastName())) {
             oldUserSumary.setLastName(updateUser.getLastName());
-            isAAPUpdateRequired=true;
-            isModified=true;
+            isAAPUpdateRequired = true;
+            isModified = true;
         }
 
-        if(!oldUserSumary.getAffiliation().equals(updateUser.getAffiliation())){
+        if (isModified(oldUserSumary.getAffiliation(), updateUser.getAffiliation())) {
             oldUserSumary.setAffiliation(updateUser.getAffiliation());
-            isAAPUpdateRequired=true;
-            isModified=true;
+            isAAPUpdateRequired = true;
+            isModified = true;
         }
 
-        if(!oldUserSumary.getCountry().equals(updateUser.getCountry())){
+        if (isModified(oldUserSumary.getCountry(), updateUser.getCountry())) {
             oldUserSumary.setCountry(updateUser.getCountry());
-            isModified=true;
+            isModified = true;
         }
 
-        if(updateUser.getOrcid()!= null && !updateUser.getOrcid().equals(oldUserSumary.getOrcid())){
+        if (isModified(updateUser.getOrcid(), updateUser.getOrcid())) {
             oldUserSumary.setOrcid(updateUser.getOrcid());
-            isModified=true;
+            isModified = true;
         }
 
-        if(isModified){
+        if (isModified) {
             oldUserSumary.setUpdateAt(Calendar.getInstance().getTime());
-            if(isAAPUpdateRequired){
+            if (isAAPUpdateRequired) {
                 //update in AAP
-                boolean isUpdateSuccessful = aapService.updateUserData(token, userReference,oldUserSumary);
-                if(!isUpdateSuccessful){
+                boolean isUpdateSuccessful = aapService.updateUserData(token, userReference, oldUserSumary);
+                if (!isUpdateSuccessful) {
                     String msg = "Failed to update user detail in AAP: " + oldUserSumary.getEmail();
                     log.error(msg);
-                    throw new UserAccessException(msg,oldUserSumary.getEmail());
+                    throw new UserAccessException(msg, oldUserSumary.getEmail());
                 }
             }
             //update pride
@@ -159,7 +159,7 @@ public class UserProfileService {
                 userRepository.save(user);
             } catch (Exception ex) {
                 String msg = "Failed to update user detail, user email: " + oldUserSumary.getEmail();
-                log.error(ex.getMessage()+";"+msg);
+                log.error(ex.getMessage() + ";" + msg);
                 throw new UserAccessException(msg, ex, oldUserSumary.getEmail());
             }
         }
@@ -169,12 +169,25 @@ public class UserProfileService {
 
     }
 
+    private boolean isModified(Object oldVal, Object newVal) {
+        if (oldVal == null && newVal == null) {
+            return false;
+        } else if (oldVal == null && newVal != null) {
+            return true;
+        } else if (oldVal != null && newVal == null) {
+            return true;
+        } else if (!oldVal.equals(newVal)) {
+            return true;
+        }
+        return false;
+    }
+
     public UserSummary getProfile(String email) {
         User currentUser = userRepository.findByEmail(email);
-        if(currentUser != null) {
+        if (currentUser != null) {
             UserSummary userSumary = ObjectMapper.mapUserToUserSummary(currentUser);
             return userSumary;
-        }else{
+        } else {
             throw new NullPointerException("Email id doesn't exist");
         }
     }
