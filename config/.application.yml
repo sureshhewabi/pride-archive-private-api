@@ -33,6 +33,7 @@ spring:
 
 #aap props
 aap:
+  reset.url: $aap_reset_url
   auth.url: $aap_auth_url
   domain:
     management.url: $aap_domain_management_url
