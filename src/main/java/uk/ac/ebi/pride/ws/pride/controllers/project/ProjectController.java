@@ -261,6 +261,8 @@ public class ProjectController {
 
         long totalElements = projectFiles.size();
         long totalPages = totalElements / pageSize;
+        if (totalElements % pageSize > 0)
+            totalPages++;
         PagedResources.PageMetadata pageMetadata = new PagedResources.PageMetadata(pageSize, page, totalElements, totalPages);
 
         PagedResources<PrideFileResource> pagedResources = new PagedResources<>(resources, pageMetadata,
