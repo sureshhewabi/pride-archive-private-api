@@ -15,7 +15,7 @@ logging:
         boot: INFO
       apache.solr: INFO
       hibernate:
-        SQL: INFO
+        SQL: DEBUG
         type.descriptor.sql.BasicBinder: INFO
 
 # To avoid errors while parsing null values in objects
@@ -52,6 +52,9 @@ pride.support:
   # PRIDE urls for email sender
 pride:
   url: https://www.ebi.ac.uk/pride
+  login_url: https://www.ebi.ac.uk/pride/login
+  password_reset_url: https://www.ebi.ac.uk/pride/forgotpassword
+  update_profile_url: https://www.ebi.ac.uk/pride/archive/users/profile/edit
   archive:
     url: https://www.ebi.ac.uk/pride/archive
     help.url: https://www.ebi.ac.uk/pride/help/archive
@@ -62,7 +65,7 @@ pride:
 pride.prod.private.folder: $private_folder
 
 twitter:
-  account: $NOT_USED
+  account: https://twitter.com/pride_ebi
   num.tweets.to.show:  4
   pride:
     consumer: $NOT_USED

@@ -8,6 +8,7 @@ import uk.ac.ebi.pride.archive.repo.repos.user.PasswordUtilities;
 import uk.ac.ebi.pride.archive.repo.repos.user.User;
 import uk.ac.ebi.pride.archive.repo.repos.user.UserRepository;
 import uk.ac.ebi.pride.archive.repo.services.user.UserAccessException;
+import uk.ac.ebi.pride.archive.repo.services.user.UserExistsException;
 import uk.ac.ebi.pride.archive.repo.services.user.UserServiceWebServiceImpl;
 import uk.ac.ebi.pride.archive.repo.services.user.UserSummary;
 import uk.ac.ebi.pride.archive.repo.services.user.url.UserWebServiceUrl;
@@ -42,39 +43,46 @@ public class UserProfileService {
     private String registrationEmailTemplate;
 
     @Autowired
+    private String registrationEmailActionNeededTemplate;
+
+    @Autowired
     private String passwordChangeEmailTemplate;
 
     @Autowired
     private UserRepository userRepository;
 
     public String registerNewUser(UserSummary userSummary) {
-        log.info("Entered registerNewUser");
-        String password = PasswordUtilities.generatePassword();
-        userSummary.setPassword(password);
+        log.info("Entered registerNewUser : " + userSummary.getEmail());
+        try {
+            String password = PasswordUtilities.generatePassword();
+            userSummary.setPassword(password);
 
-        //Sign up user in both AAP and PRIDE
-        log.info("Begin user signup");
-        userWebServiceUrl.setAapRegisterUrl(aapRegisterURL);
-        User user = userServiceWebServiceImpl.signUp(userSummary);
+            //Sign up user in both AAP and PRIDE
+            log.info("Begin user signup : " + userSummary.getEmail());
+            userWebServiceUrl.setAapRegisterUrl(aapRegisterURL);
+            User user = userServiceWebServiceImpl.signUp(userSummary);
 
-
-        //Add user to submitter domain in AAP
-        log.info("Begin user domain registeration");
-        if (user.getUserRef() != null) {
-            boolean isDomainRegSuccessful = aapService.addUserToAAPDomain(user.getUserRef(), AAPConstants.PRIDE_SUBMITTER_DOMAIN);
-            if (!isDomainRegSuccessful) {
-                log.error("Error adding user to submitter domain in AAP:" + user.getEmail());
+            //Add user to submitter domain in AAP
+            log.info("Begin user domain registration: " + userSummary.getEmail());
+            if (user.getUserRef() != null) {
+                boolean isDomainRegSuccessful = aapService.addUserToAAPDomain(user.getUserRef(), AAPConstants.PRIDE_SUBMITTER_DOMAIN);
+                if (!isDomainRegSuccessful) {
+                    log.error("Error adding user to submitter domain in AAP:" + user.getEmail());
+                }
+            } else {
+                log.error("Error creating user and getting user ref for email:" + user.getEmail());
             }
-        } else {
-            log.error("Error creating user and getting user ref for email:" + user.getEmail());
+
+            // send registration success email
+            log.info("Begin user email trigger");
+            prideSupportEmailSender.sendRegistrationEmail(ObjectMapper.mapUserSummaryToUser(userSummary), password, registrationEmailTemplate);
+            log.info("Exiting registerNewUser");
+            return user.getUserRef();
+        } catch (UserExistsException e) {
+            log.info("User already exists in AAP but not in PRIDE. Sending email to take action for: " + userSummary.getEmail());
+            prideSupportEmailSender.sendRegistrationEmailActionNeeded(ObjectMapper.mapUserSummaryToUser(userSummary), registrationEmailActionNeededTemplate);
         }
-
-        // send registration success email
-        log.info("Begin user email trigger");
-        prideSupportEmailSender.sendRegistrationEmail(ObjectMapper.mapUserSummaryToUser(userSummary), password, registrationEmailTemplate);
-
-        log.info("Exiting registerNewUser");
-        return user.getUserRef();
+        return "";
     }
 
     public void changePassword(String userReference, ChangePassword changePassword) throws Exception {
