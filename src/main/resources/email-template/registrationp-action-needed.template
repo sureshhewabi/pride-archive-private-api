@@ -2,9 +2,10 @@ Dear [USERNAME],
 
 Thank you for registering with PRIDE.
 
-Your email address([EMAIL]) already exists in the EMBL-EBI Authentication database, but for some reason it wasn't properly synced to the PRIDE database.
+Since the end of 2019, PRIDE is using the common EMBL-EBI user authentication system.
+Since this system is quite new, we are still experiencing some unforeseen issues. We apologise for any inconvenience.
 
-Please follow the below instructions to fix the issue:
+Please follow the instructions below to fix the issue:
 
 1. Reset your password : [PASSWORD_RESET_LINK]
 2. Follow the instructions mentioned in the password reset email.
