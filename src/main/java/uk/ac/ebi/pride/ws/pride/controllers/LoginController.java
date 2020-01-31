@@ -27,6 +27,7 @@ import uk.ac.ebi.pride.archive.repo.util.AAPConstants;
 import uk.ac.ebi.pride.ws.pride.models.user.AapJwtToken;
 import uk.ac.ebi.pride.ws.pride.models.user.Credentials;
 import uk.ac.ebi.pride.ws.pride.service.user.AAPService;
+import uk.ac.ebi.pride.ws.pride.service.user.UserProfileService;
 import uk.ac.ebi.pride.ws.pride.utils.APIError;
 
 import javax.validation.Valid;
@@ -43,6 +44,9 @@ public class LoginController {
 
     @Autowired
     private UserService userServiceImpl;
+
+    @Autowired
+    private UserProfileService userProfileService;
 
     @Autowired
     private AAPService aapService;
@@ -65,7 +69,10 @@ public class LoginController {
                     (auth_url, HttpMethod.GET, entity, String.class);
             jwtToken = response.getBody();
             boolean emailInUse = userServiceImpl.isEmailedInUse(email);
-            if (!emailInUse) { // User is in AAP DB but not in our DB
+            if (emailInUse) {//update password for existing local user..just to avoid mismact between AAP & our local DB
+                userProfileService.updateLocalPassword(email, credentials.getPassword());
+            }
+            else { // User is in AAP DB but not in our DB
                 java.util.Base64.Decoder decoder = java.util.Base64.getUrlDecoder();
                 String[] parts = jwtToken.split("\\."); // split out the "parts" (header, payload and signature)
                 String payloadJson = new String(decoder.decode(parts[1]));

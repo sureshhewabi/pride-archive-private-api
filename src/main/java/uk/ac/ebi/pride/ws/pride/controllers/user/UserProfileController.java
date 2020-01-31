@@ -150,7 +150,8 @@ public class UserProfileController {
 
     @PostMapping(path = "/reset-password")
     public ResponseEntity<String> resetPassword(@RequestBody ResetPassword resetPassword) {
-        return aapService.resetPassword(resetPassword);
+        ResponseEntity<String> responseEntity = aapService.resetPassword(resetPassword);
+        userProfileService.updateLocalPassword(resetPassword.getUsername(), resetPassword.getPassword());
+        return responseEntity;
     }
-
 }

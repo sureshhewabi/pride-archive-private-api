@@ -199,4 +199,10 @@ public class UserProfileService {
             throw new NullPointerException("Email id doesn't exist");
         }
     }
+
+    public User updateLocalPassword (String email, String password) {
+        User user = userRepository.findByEmail(email);
+        user.setPassword(password);
+        return userRepository.save(user);
+    }
 }
