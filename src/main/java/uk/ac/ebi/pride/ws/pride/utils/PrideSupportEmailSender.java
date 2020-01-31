@@ -27,6 +27,7 @@ public class PrideSupportEmailSender {
 
     public static final String USER_FEEDBACK_EMAIL_TITLE = "PRIDE user feedback";
     public static final String REGISTRATION_EMAIL_TITLE = "PRIDE user registration";
+    public static final String REGISTRATION_ACTION_NEEDED_EMAIL_TITLE = "PRIDE user registration: Action needed";
     public static final String PASSWORD_RESET_EMAIL_TITLE = "Password reset";
     public static final String PUBLISH_PROJECT_EMAIL_TITLE = "Publish project";
     public static final String USER_NAME_PLACE_HOLDER = "[USERNAME]";
@@ -45,6 +46,9 @@ public class PrideSupportEmailSender {
     public static final String PRIDE_URL_PLACE_HOLDER = "[PRIDE_URL]";
     public static final String PRIDE_ARCHIVE_HELP_URL_PLACE_HOLDER = "[PRIDE_ARCHIVE_HELP_URL]";
     public static final String PRIDE_ARCHIVE_SUBMISSION_URL_PLACE_HOLDER = "[PRIDE_ARCHIVE_SUBMISSION_URL]";
+    public static final String LOGIN_URL_PLACE_HOLDER = "[PRIDE_LOGIN_URL]";
+    public static final String PROFILE_UPDATE_URL_PLACE_HOLDER = "[PROFILE_UPDATE_LINK]";
+    public static final String PASSWORD_RESET_URL_PLACE_HOLDER = "[PASSWORD_RESET_LINK]";
     public static final String PRIDE_ARCHIVE_LOGIN_URL_PLACE_HOLDER = "[PRIDE_ARCHIVE_LOGIN_URL]";
     public static final String PRIDE_SUPPORT_EMAIL_PLACE_HOLDER = "[PRIDE_SUPPORT]";
     public static final String PROJECT_ACCESSION_PLACE_HOLDER = "[PROJECT_ACCESSION]";
@@ -63,6 +67,15 @@ public class PrideSupportEmailSender {
 
     @Value("${pride.url}")
     private String prideUrl;
+
+    @Value("${pride.login_url}")
+    private String prideLoginUrl;
+
+    @Value("${pride.password_reset_url}")
+    private String passwordResetUrl;
+
+    @Value("${pride.update_profile_url}")
+    private String updateProfileUrl;
 
     @Value("${pride.archive.help.url}")
     private String prideArchiveHelpUrl;
@@ -200,6 +213,25 @@ public class PrideSupportEmailSender {
         }
     }
 
+    public void sendRegistrationEmailActionNeeded(User user, String emailTemplate) {
+
+        String emailBody = emailTemplate;
+        emailBody = emailBody.replace(USER_NAME_PLACE_HOLDER, user.getFirstName() + " " + user.getLastName());
+        emailBody = emailBody.replace(EMAIL_PLACE_HOLDER, user.getEmail());
+        emailBody = emailBody.replace(PASSWORD_RESET_URL_PLACE_HOLDER, user.getEmail());
+        emailBody = emailBody.replace(LOGIN_URL_PLACE_HOLDER, user.getEmail());
+        emailBody = emailBody.replace(PROFILE_UPDATE_URL_PLACE_HOLDER, user.getEmail());
+        emailBody = emailBody.replace(PRIDE_ARCHIVE_SUBMISSION_URL_PLACE_HOLDER, prideArchiveSubmissionUrl);
+        emailBody = emailBody.replace(PRIDE_ARCHIVE_HELP_URL_PLACE_HOLDER, prideArchiveHelpUrl);
+        emailBody = formatCommonFields(emailBody);
+        try {
+            sendEmail(new String[]{user.getEmail()}, REGISTRATION_ACTION_NEEDED_EMAIL_TITLE, emailBody);
+        } catch (MailException ex) {
+            String message = "Failed to register user: " + user.getEmail();
+            logger.error(message, ex);
+        }
+    }
+
     private String formatCommonFields(String emailBody) {
         emailBody = emailBody.replace(PRIDE_SUPPORT_EMAIL_PLACE_HOLDER, prideSupportEmailAddress);
         emailBody = emailBody.replace(PRIDE_URL_PLACE_HOLDER, prideUrl);
@@ -223,6 +255,12 @@ public class PrideSupportEmailSender {
     @Bean("registrationEmailTemplate")
     public String getRegistrationEmailTemplate() throws IOException {
         Resource emailTemplateResource = resourceLoader.getResource("classpath:email-template/registration.template");
+        return getEmailTemplate(emailTemplateResource);
+    }
+
+    @Bean("registrationEmailActionNeededTemplate")
+    public String getRegistrationEmailActionNeededTemplate() throws IOException {
+        Resource emailTemplateResource = resourceLoader.getResource("classpath:email-template/registrationp-action-needed.template");
         return getEmailTemplate(emailTemplateResource);
     }
 

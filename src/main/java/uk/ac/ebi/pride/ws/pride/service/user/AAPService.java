@@ -128,7 +128,7 @@ public class AAPService {
         return prideAAPDomainsMap;
     }
 
-    protected boolean addUserToAAPDomain(String userRef, String domainName) {
+    public boolean addUserToAAPDomain(String userRef, String domainName) {
         if (prideAAPDomainsMap == null) {
             getAAPDomains();
         }
