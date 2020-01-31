@@ -218,9 +218,9 @@ public class PrideSupportEmailSender {
         String emailBody = emailTemplate;
         emailBody = emailBody.replace(USER_NAME_PLACE_HOLDER, user.getFirstName() + " " + user.getLastName());
         emailBody = emailBody.replace(EMAIL_PLACE_HOLDER, user.getEmail());
-        emailBody = emailBody.replace(PASSWORD_RESET_URL_PLACE_HOLDER, user.getEmail());
-        emailBody = emailBody.replace(LOGIN_URL_PLACE_HOLDER, user.getEmail());
-        emailBody = emailBody.replace(PROFILE_UPDATE_URL_PLACE_HOLDER, user.getEmail());
+        emailBody = emailBody.replace(PASSWORD_RESET_URL_PLACE_HOLDER, passwordResetUrl);
+        emailBody = emailBody.replace(LOGIN_URL_PLACE_HOLDER, prideLoginUrl);
+        emailBody = emailBody.replace(PROFILE_UPDATE_URL_PLACE_HOLDER, updateProfileUrl);
         emailBody = emailBody.replace(PRIDE_ARCHIVE_SUBMISSION_URL_PLACE_HOLDER, prideArchiveSubmissionUrl);
         emailBody = emailBody.replace(PRIDE_ARCHIVE_HELP_URL_PLACE_HOLDER, prideArchiveHelpUrl);
         emailBody = formatCommonFields(emailBody);
