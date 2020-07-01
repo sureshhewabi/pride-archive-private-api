@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import lombok.extern.log4j.Log4j;
 import org.apache.commons.codec.binary.Base64;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,6 +36,7 @@ import java.nio.charset.Charset;
 import java.util.Date;
 
 @RestController
+@Log4j
 public class LoginController {
 
     private static final Logger logger = LoggerFactory.getLogger(LoginController.class);
@@ -61,18 +63,17 @@ public class LoginController {
     public String getAAPToken(@RequestBody @Valid Credentials credentials) throws Exception {
         ResponseEntity<String> response = null;
         String jwtToken = null;
+        String email = credentials.getUsername();
         try {
-            String email = credentials.getUsername();
             HttpEntity<String> entity = new HttpEntity<>(createHttpHeaders(email, credentials.getPassword()));
             RestTemplate restTemplate = new RestTemplate();
             response = restTemplate.exchange
                     (auth_url, HttpMethod.GET, entity, String.class);
             jwtToken = response.getBody();
             boolean emailInUse = userServiceImpl.isEmailedInUse(email);
-            if (emailInUse) {//update password for existing local user..just to avoid mismact between AAP & our local DB
+            if (emailInUse) {//update password for existing local user..just to avoid mismatch between AAP & our local DB
                 userProfileService.updateLocalPassword(email, credentials.getPassword());
-            }
-            else { // User is in AAP DB but not in our DB
+            } else { // User is in AAP DB but not in our DB
                 java.util.Base64.Decoder decoder = java.util.Base64.getUrlDecoder();
                 String[] parts = jwtToken.split("\\."); // split out the "parts" (header, payload and signature)
                 String payloadJson = new String(decoder.decode(parts[1]));
@@ -106,9 +107,13 @@ public class LoginController {
             }
 
         } catch (HttpClientErrorException e) {
-            throw new Exception("username/password wrong. Please check username or password to get token", e);
+            String s = "Username/password wrong : " + email;
+            log.info(s);
+            throw new Exception(s, e);
         } catch (Exception e) {
-            throw new RuntimeException("Error while getting AAP token", e);
+            String message = "Error while getting AAP token : " + email;
+            log.error(message);
+            throw new RuntimeException(message, e);
         }
         return jwtToken;
     }
