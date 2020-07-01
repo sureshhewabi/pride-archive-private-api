@@ -5,6 +5,7 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import lombok.extern.log4j.Log4j;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.binary.Base64;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,7 +37,7 @@ import java.nio.charset.Charset;
 import java.util.Date;
 
 @RestController
-@Log4j
+@Slf4j
 public class LoginController {
 
     private static final Logger logger = LoggerFactory.getLogger(LoginController.class);
@@ -109,7 +110,7 @@ public class LoginController {
         } catch (HttpClientErrorException e) {
             String s = "Username/password wrong : " + email;
             log.info(s);
-            throw new Exception(s, e);
+            throw e;
         } catch (Exception e) {
             String message = "Error while getting AAP token : " + email;
             log.error(message);
