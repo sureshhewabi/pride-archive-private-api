@@ -15,7 +15,7 @@ logging:
         boot: INFO
       apache.solr: INFO
       hibernate:
-        SQL: DEBUG
+        SQL: INFO
         type.descriptor.sql.BasicBinder: INFO
 
 # To avoid errors while parsing null values in objects
