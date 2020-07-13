@@ -8,10 +8,10 @@ import uk.ac.ebi.pride.archive.dataprovider.param.CvParamProvider;
 import uk.ac.ebi.pride.archive.dataprovider.reference.Reference;
 import uk.ac.ebi.pride.archive.dataprovider.user.Contact;
 import uk.ac.ebi.pride.archive.dataprovider.user.ContactProvider;
-import uk.ac.ebi.pride.archive.repo.repos.project.Project;
-import uk.ac.ebi.pride.archive.repo.repos.project.ProjectCvParam;
-import uk.ac.ebi.pride.archive.repo.repos.project.ProjectTag;
-import uk.ac.ebi.pride.archive.repo.repos.user.User;
+import uk.ac.ebi.pride.archive.repo.models.project.Project;
+import uk.ac.ebi.pride.archive.repo.models.project.ProjectCvParam;
+import uk.ac.ebi.pride.archive.repo.models.project.ProjectTag;
+import uk.ac.ebi.pride.archive.repo.models.user.User;
 import uk.ac.ebi.pride.ws.pride.models.dataset.PrideProject;
 import uk.ac.ebi.pride.ws.pride.utils.WsContastants;
 
@@ -34,15 +34,17 @@ public class Transformer {
 
     /**
      * Transform a list of projects from Oracle
+     *
      * @param oracleProjects list of oracle projects
      * @return list of projects from API
      */
-    public static List<PrideProject> transformPrivateProjects(List<Project> oracleProjects){
+    public static List<PrideProject> transformPrivateProjects(List<Project> oracleProjects) {
         return oracleProjects.stream().map(Transformer::transformOracleProject).collect(Collectors.toList());
     }
 
     /**
      * Transform a project
+     *
      * @param oracleProject oracle Project
      * @return API project
      */
@@ -52,37 +54,37 @@ public class Transformer {
             doi = oracleProject.getDoi().get();
 
         Collection<CvParamProvider> instruments = new ArrayList<>();
-        if(oracleProject.getInstruments() != null && oracleProject.getInstruments().size() > 0)
-            instruments = oracleProject.getInstruments().stream().map( x-> new CvParam(x.getCvLabel(), x.getAccession(),x.getName(), x.getValue())).collect(Collectors.toList());
+        if (oracleProject.getInstruments() != null && oracleProject.getInstruments().size() > 0)
+            instruments = oracleProject.getInstruments().stream().map(x -> new CvParam(x.getCvLabel(), x.getAccession(), x.getName(), x.getValue())).collect(Collectors.toList());
 
         Collection<CvParamProvider> softwares = new ArrayList<>();
-        if(oracleProject.getSoftware() != null && oracleProject.getSoftware().size() > 0)
-            softwares = oracleProject.getSoftware().stream().map( x -> new CvParam(x.getCvLabel(), x.getAccession(),x.getName(),x.getValue())).collect(Collectors.toList());
+        if (oracleProject.getSoftware() != null && oracleProject.getSoftware().size() > 0)
+            softwares = oracleProject.getSoftware().stream().map(x -> new CvParam(x.getCvLabel(), x.getAccession(), x.getName(), x.getValue())).collect(Collectors.toList());
 
 
         Collection<ContactProvider> labPIs = new ArrayList<>();
-        if(oracleProject.getLabHeads() != null && oracleProject.getLabHeads().size() > 0)
+        if (oracleProject.getLabHeads() != null && oracleProject.getLabHeads().size() > 0)
             labPIs = oracleProject.getLabHeads().stream()
-                    .map( x-> new Contact(x.getTitle(), x.getFirstName(),x.getLastName(),
-                            String.valueOf(x.getId()),x.getAffiliation(), x.getEmail(), x.getCountry(),x.getOrcid()))
+                    .map(x -> new Contact(x.getTitle(), x.getFirstName(), x.getLastName(),
+                            String.valueOf(x.getId()), x.getAffiliation(), x.getEmail(), x.getCountry(), x.getOrcid()))
                     .collect(Collectors.toList());
 
         Collection<ContactProvider> submitters = new ArrayList<>();
-        if(oracleProject.getSubmitter() != null){
+        if (oracleProject.getSubmitter() != null) {
             User x = oracleProject.getSubmitter();
-            submitters.add(new Contact(x.getTitle(), x.getFirstName(),x.getLastName(),
-                    String.valueOf(x.getId()),x.getAffiliation(), x.getEmail(), x.getCountry(),x.getOrcid()));
+            submitters.add(new Contact(x.getTitle(), x.getFirstName(), x.getLastName(),
+                    String.valueOf(x.getId()), x.getAffiliation(), x.getEmail(), x.getCountry(), x.getOrcid()));
         }
 
         Collection<CvParamProvider> quantificationMethods = new ArrayList<>();
-        if(oracleProject.getQuantificationMethods() != null && oracleProject.getQuantificationMethods().size() > 0)
+        if (oracleProject.getQuantificationMethods() != null && oracleProject.getQuantificationMethods().size() > 0)
             quantificationMethods = oracleProject.getQuantificationMethods().stream()
                     .map(x -> new CvParam(x.getCvLabel(), x.getAccession(), x.getName(), x.getValue()))
                     .collect(Collectors.toList());
 
         //References
         List<Reference> references = oracleProject.getReferences().stream()
-                .map( reference -> new Reference(reference.getReferenceLine(), reference.getPubmedId(), reference.getDoi()))
+                .map(reference -> new Reference(reference.getReferenceLine(), reference.getPubmedId(), reference.getDoi()))
                 .collect(Collectors.toList());
 
         //Modifications
@@ -94,7 +96,7 @@ public class Transformer {
         //Get software information
         Set<CvParam> softwareList = oracleProject.getSoftware()
                 .stream()
-                .filter(software -> software.getCvParam() != null )
+                .filter(software -> software.getCvParam() != null)
                 .map(software -> new CvParam(software.getCvParam().getCvLabel(), software.getCvParam().getAccession(),
                         software.getCvParam().getName(), software.getCvParam().getValue()))
                 .collect(Collectors.toSet());
@@ -114,16 +116,16 @@ public class Transformer {
         Collection<CvParamProvider> organismParts = new ArrayList<>();
 
 
-        if(oracleProject.getSamples() != null && oracleProject.getSamples().size() > 0){
-            for( ProjectCvParam param: oracleProject.getSamples()){
-                if(param.getCvParam() != null){
+        if (oracleProject.getSamples() != null && oracleProject.getSamples().size() > 0) {
+            for (ProjectCvParam param : oracleProject.getSamples()) {
+                if (param.getCvParam() != null) {
 
-                    CvParam value = new CvParam(param.getCvLabel(),param.getAccession(), param.getName(),param.getValue());
-                    if(param.getCvLabel().equalsIgnoreCase(WsContastants.CV_LABEL_ORGANISM)){
+                    CvParam value = new CvParam(param.getCvLabel(), param.getAccession(), param.getName(), param.getValue());
+                    if (param.getCvLabel().equalsIgnoreCase(WsContastants.CV_LABEL_ORGANISM)) {
                         organisms.add(value);
-                    }else if(param.getCvLabel().equalsIgnoreCase(WsContastants.CV_LABEL_CELL_COMPONENT) || param.getCvLabel().equalsIgnoreCase(WsContastants.CV_LABEL_CELL_TISSUE)){
+                    } else if (param.getCvLabel().equalsIgnoreCase(WsContastants.CV_LABEL_CELL_COMPONENT) || param.getCvLabel().equalsIgnoreCase(WsContastants.CV_LABEL_CELL_TISSUE)) {
                         ((ArrayList<CvParamProvider>) organismParts).add(value);
-                    }else if(param.getCvLabel().equalsIgnoreCase(WsContastants.CV_LABEL_DISEASE)){
+                    } else if (param.getCvLabel().equalsIgnoreCase(WsContastants.CV_LABEL_DISEASE)) {
                         ((ArrayList<CvParamProvider>) diseases).add(value);
                     }
                 }
@@ -154,10 +156,11 @@ public class Transformer {
 
     /**
      * Get convert sentence to Capitalize Style
+     *
      * @param sentence original sentence
      * @return Capitalize sentence
      */
-    private static String convertSentenceStyle(String sentence){
+    private static String convertSentenceStyle(String sentence) {
         sentence = sentence.toLowerCase().trim();
         return org.apache.commons.lang3.StringUtils.capitalize(sentence);
     }
@@ -165,10 +168,11 @@ public class Transformer {
 
     /**
      * Transform a List of {@link IdentifiedModificationProvider} to a List of {@link IdentifiedModification}
+     *
      * @param oldPtms List of {@link IdentifiedModificationProvider}
      * @return List of {@link IdentifiedModification}
      */
-    public static List<IdentifiedModification> transformModifications(Collection<? extends IdentifiedModificationProvider> oldPtms){
+    public static List<IdentifiedModification> transformModifications(Collection<? extends IdentifiedModificationProvider> oldPtms) {
         return oldPtms.stream().map(ptm -> {
             CvParam ptmName = new CvParam(ptm.getModificationCvTerm().getCvLabel(),
                     ptm.getModificationCvTerm().getAccession(),
@@ -176,13 +180,13 @@ public class Transformer {
                     ptm.getModificationCvTerm().getValue());
 
             CvParam neutral = null;
-            if(ptm.getNeutralLoss() != null)
+            if (ptm.getNeutralLoss() != null)
                 neutral = new CvParam(ptm.getNeutralLoss().getCvLabel(),
                         ptm.getNeutralLoss().getAccession(),
                         ptm.getNeutralLoss().getName(),
                         ptm.getNeutralLoss().getValue());
 
-            List<Tuple<Integer, Set<? extends CvParamProvider>>> ptmPositions = ptm.getPositionMap().stream().map(position ->{
+            List<Tuple<Integer, Set<? extends CvParamProvider>>> ptmPositions = ptm.getPositionMap().stream().map(position -> {
                 Collection<CvParamProvider> scores = (Collection<CvParamProvider>) position.getValue();
                 Integer currentPosition = position.getKey();
                 Set<CvParam> newScores = scores.stream().map(score -> new CvParam(score.getCvLabel(),

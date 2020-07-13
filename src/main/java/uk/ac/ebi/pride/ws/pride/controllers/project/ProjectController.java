@@ -12,8 +12,8 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.util.DigestUtils;
 import org.springframework.web.bind.annotation.*;
-import uk.ac.ebi.pride.archive.repo.repos.file.ProjectFile;
-import uk.ac.ebi.pride.archive.repo.repos.project.Project;
+import uk.ac.ebi.pride.archive.repo.models.file.ProjectFile;
+import uk.ac.ebi.pride.archive.repo.models.project.Project;
 import uk.ac.ebi.pride.utilities.util.Tuple;
 import uk.ac.ebi.pride.ws.pride.assemblers.PrideProjectResourceAssembler;
 import uk.ac.ebi.pride.ws.pride.assemblers.ProjectFileResourceAssembler;
@@ -75,28 +75,34 @@ public class ProjectController {
 
         User currentUser = (User) (authentication).getDetails();
 
-        List<Project> projectsList = projectService.findUserProjects(currentUser.getUserReference(), false);
-        PrideProjectResourceAssembler assembler = new PrideProjectResourceAssembler(authentication, ProjectController.class, ProjectResource.class);
-        projectsList = projectsList.stream().filter(project -> !project.isPublicProject()).collect(Collectors.toList());
-        List<ProjectResource> resources = assembler.toResources(projectsList);
+        try {
+            List<Project> projectsList = projectService.findUserProjects(currentUser.getUserReference(), false);
+            PrideProjectResourceAssembler assembler = new PrideProjectResourceAssembler(authentication, ProjectController.class, ProjectResource.class);
+            projectsList = projectsList.stream().filter(project -> !project.isPublicProject()).collect(Collectors.toList());
+            List<ProjectResource> resources = assembler.toResources(projectsList);
 
-        long totalElements = projectsList.size();
-        long totalPages = totalElements / pageSize + 1;
-        PagedResources.PageMetadata pageMetadata = new PagedResources.PageMetadata(pageSize, page, totalElements, totalPages);
+            long totalElements = projectsList.size();
+            long totalPages = totalElements / pageSize + 1;
+            PagedResources.PageMetadata pageMetadata = new PagedResources.PageMetadata(pageSize, page, totalElements, totalPages);
 
-        PagedResources<ProjectResource> pagedResources = new PagedResources<>(resources, pageMetadata,
-                linkTo(methodOn(ProjectController.class).getReviewerProjects(authentication, pageSize, page)).withSelfRel(),
-                linkTo(methodOn(ProjectController.class).getReviewerProjects(authentication, pageSize, (int) WsUtils.validatePage(page + 1, totalPages)))
-                        .withRel(WsContastants.HateoasEnum.next.name()),
-                linkTo(methodOn(ProjectController.class).getReviewerProjects(authentication, pageSize, (int) WsUtils.validatePage(page - 1, totalPages)))
-                        .withRel(WsContastants.HateoasEnum.previous.name()),
-                linkTo(methodOn(ProjectController.class).getReviewerProjects(authentication, pageSize, 0))
-                        .withRel(WsContastants.HateoasEnum.first.name()),
-                linkTo(methodOn(ProjectController.class).getReviewerProjects(authentication, pageSize, (int) totalPages))
-                        .withRel(WsContastants.HateoasEnum.last.name())
-        );
+            PagedResources<ProjectResource> pagedResources = new PagedResources<>(resources, pageMetadata,
+                    linkTo(methodOn(ProjectController.class).getReviewerProjects(authentication, pageSize, page)).withSelfRel(),
+                    linkTo(methodOn(ProjectController.class).getReviewerProjects(authentication, pageSize, (int) WsUtils.validatePage(page + 1, totalPages)))
+                            .withRel(WsContastants.HateoasEnum.next.name()),
+                    linkTo(methodOn(ProjectController.class).getReviewerProjects(authentication, pageSize, (int) WsUtils.validatePage(page - 1, totalPages)))
+                            .withRel(WsContastants.HateoasEnum.previous.name()),
+                    linkTo(methodOn(ProjectController.class).getReviewerProjects(authentication, pageSize, 0))
+                            .withRel(WsContastants.HateoasEnum.first.name()),
+                    linkTo(methodOn(ProjectController.class).getReviewerProjects(authentication, pageSize, (int) totalPages))
+                            .withRel(WsContastants.HateoasEnum.last.name())
+            );
 
-        return new HttpEntity<>(pagedResources);
+            return new HttpEntity<>(pagedResources);
+        } catch (Exception exception) {
+            log.error("Error in getting private projects" + exception.getMessage());
+            return ResponseEntity.noContent().build();
+        }
+
     }
 
     @ApiOperation(notes = "Private PRIDE Archive Project submitted by the user which is under review of the reviewer. User needs to be authenticated to view his private submissions",
@@ -107,7 +113,7 @@ public class ProjectController {
     @PreAuthorize("isAuthenticated()")
     @RequestMapping(value = "/projects/{accession}", method = RequestMethod.GET, produces = {MediaType.APPLICATION_JSON_VALUE})
     public ResponseEntity<Object> getPrivateProject(Authentication authentication,
-                                                    @PathVariable(value = "accession") String projectAccession) {
+                                                    @PathVariable(value = "accession") String projectAccession) throws Exception {
 
         User currentUser = (User) (authentication).getDetails();
         List<Project> projectsReviewerList = projectService.findReviewerProjects(currentUser.getUserReference());
@@ -132,7 +138,7 @@ public class ProjectController {
     @RequestMapping(value = "/projects/publish/{accession}", method = RequestMethod.POST, produces = {MediaType.APPLICATION_JSON_VALUE})
     public ResponseEntity<Object> publishPrivateProject(Authentication authentication,
                                                         @PathVariable(value = "accession") String projectAccession,
-                                                        @RequestBody PublishProjectRequest publishProjectRequest) {
+                                                        @RequestBody PublishProjectRequest publishProjectRequest) throws Exception {
 
         User currentUser = (User) (authentication).getDetails();
         List<Project> projectList = projectService.findUserProjects(currentUser.getUserReference(), false);
@@ -193,7 +199,7 @@ public class ProjectController {
     @RequestMapping(value = "projects/reviewer-submissions", method = RequestMethod.GET, produces = {MediaType.APPLICATION_JSON_VALUE})
     public HttpEntity<PagedResources> getReviewerProjects(Authentication authentication,
                                                           @RequestParam(value = "pageSize", defaultValue = "100", required = false) int pageSize,
-                                                          @RequestParam(value = "page", defaultValue = "0", required = false) int page) {
+                                                          @RequestParam(value = "page", defaultValue = "0", required = false) int page) throws Exception {
         User currentUser = (User) (authentication).getDetails();
         List<Project> projectsList = projectService.findReviewerProjects(currentUser.getUserReference());
 
@@ -236,7 +242,7 @@ public class ProjectController {
     public HttpEntity<PagedResources<PrideFileResource>> getFilesByProject(Authentication authentication,
                                                                            @PathVariable(value = "accession") String projectAccession,
                                                                            @RequestParam(value = "pageSize", defaultValue = "100", required = false) int pageSize,
-                                                                           @RequestParam(value = "page", defaultValue = "0", required = false) int page) {
+                                                                           @RequestParam(value = "page", defaultValue = "0", required = false) int page) throws Exception {
 
         Tuple<Integer, Integer> pageParams = WsUtils.validatePageLimit(page, pageSize);
         page = pageParams.getKey();
@@ -298,7 +304,7 @@ public class ProjectController {
             produces = {MediaType.APPLICATION_OCTET_STREAM_VALUE})
     public HttpEntity<Resource> getFileByProject(@PathVariable(value = "projectId") String accession,
                                                  @PathVariable(value = "fileId") Long fileId,
-                                                 @RequestParam(value = "token", required = true) String token) {
+                                                 @RequestParam(value = "token", required = true) String token) throws Exception {
 
         Optional<ProjectFile> projectFile = projectService.getFilePath(fileId);
 

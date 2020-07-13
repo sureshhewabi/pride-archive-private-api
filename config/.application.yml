@@ -21,28 +21,6 @@ logging:
 # To avoid errors while parsing null values in objects
 spring.jackson.default-property-inclusion: NON_NULL
 
-# Oracle Database
-spring:
-  jpa.database: default
-  datasource:
-    oracle:
-      jdbcUrl: $oracle_jdbc_url
-      username: $oracle_username
-      password: $oracle_password
-      driver-class-name: oracle.jdbc.OracleDriver
-
-#aap props
-aap:
-  reset.url: $aap_reset_url
-  auth.url: $aap_auth_url
-  domain:
-    management.url: $aap_domain_management_url
-    url: $aap_domain_url
-  pride.service:
-    uname: $aap_pride_user
-    pwd: $aap_pride_passwd
-jwt.certificate: $aap_jwt_cer
-
 #email properties
 spring.mail.host: smtp.ebi.ac.uk
 pride.support:

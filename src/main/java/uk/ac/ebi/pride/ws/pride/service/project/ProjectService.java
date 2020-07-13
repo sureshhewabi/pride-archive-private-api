@@ -1,45 +1,46 @@
 package uk.ac.ebi.pride.ws.pride.service.project;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import uk.ac.ebi.pride.archive.repo.repos.file.ProjectFile;
-import uk.ac.ebi.pride.archive.repo.repos.file.ProjectFileRepository;
-import uk.ac.ebi.pride.archive.repo.repos.project.Project;
-import uk.ac.ebi.pride.archive.repo.repos.project.ProjectRepository;
-import uk.ac.ebi.pride.archive.repo.repos.user.UserRepository;
+import uk.ac.ebi.pride.archive.repo.client.FileRepoClient;
+import uk.ac.ebi.pride.archive.repo.client.ProjectRepoClient;
+import uk.ac.ebi.pride.archive.repo.client.UserRepoClient;
+import uk.ac.ebi.pride.archive.repo.models.file.ProjectFile;
+import uk.ac.ebi.pride.archive.repo.models.project.Project;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 
 @Service
 public class ProjectService {
 
-    @Autowired
-    private ProjectRepository projectRepository;
+    private UserRepoClient userRepoClient;
+    private ProjectRepoClient projectRepoClient;
+    private FileRepoClient fileRepoClient;
 
-    @Autowired
-    private UserRepository userRepository;
+    public ProjectService(UserRepoClient userRepoClient, ProjectRepoClient projectRepoClient, FileRepoClient fileRepoClient) {
+        this.userRepoClient = userRepoClient;
+        this.projectRepoClient = projectRepoClient;
+        this.fileRepoClient = fileRepoClient;
+    }
 
-    @Autowired
-    private ProjectFileRepository fileRepository;
-
-    public List<Project> findUserProjects(String userReference, boolean isPublic) {
-        Long userId = userRepository.findByUserRef(userReference).getId();
-        List<Project> projectsList = projectRepository.findFilteredBySubmitterIdAndIsPublic(userId,isPublic);
+    public List<Project> findUserProjects(String userReference, boolean isPublic) throws IOException {
+        Long userId = userRepoClient.findByUserRef(userReference).getId();
+        List<Project> projectsList = projectRepoClient.findBySubmitterIdAndIsPublic(userId, isPublic);
         return projectsList;
     }
 
-    public List<Project> findReviewerProjects(String userReference) {
-        List<Project> projectsList = projectRepository.findFilteredByReviewer(userReference);
+    public List<Project> findReviewerProjects(String userReference) throws IOException {
+        List<Project> projectsList = projectRepoClient.findByReviewer(userReference);
         return projectsList;
     }
 
-    public Optional<ProjectFile> getFilePath(Long fileId){
-        return fileRepository.findById(fileId);
+    public Optional<ProjectFile> getFilePath(Long fileId) throws IOException {
+        return fileRepoClient.findById(fileId);
     }
 
-    public List<ProjectFile> findProjectFiles(String projectAccession) {
-        Project project = projectRepository.findByAccession(projectAccession);
-        return fileRepository.findAllByProjectId(project.getId());
+    public List<ProjectFile> findProjectFiles(String projectAccession) throws IOException {
+        Project project = projectRepoClient.findByAccession(projectAccession);
+        return fileRepoClient.findAllByProjectId(project.getId());
     }
 }

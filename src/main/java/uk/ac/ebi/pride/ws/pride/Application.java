@@ -12,6 +12,7 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 import springfox.documentation.swagger2.annotations.EnableSwagger2;
+import uk.ac.ebi.pride.archive.repo.client.config.EnableRepoConfig;
 
 /**
  * Retrieve the projects {@link uk.ac.ebi.pride.archive.dataprovider.project.ProjectProvider} from PRIDE Archive and the corresponding information.
@@ -26,6 +27,7 @@ import springfox.documentation.swagger2.annotations.EnableSwagger2;
 @ComponentScan({"uk.ac.ebi.pride.ws.pride","uk.ac.ebi.tsc.aap.client.security",
         "uk.ac.ebi.pride.utilities.ols.web.service.cache"})
 @Slf4j
+@EnableRepoConfig
 public class Application {
 
     public static void main(String[] args) {
