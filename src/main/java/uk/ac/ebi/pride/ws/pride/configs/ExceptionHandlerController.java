@@ -43,7 +43,6 @@ public class ExceptionHandlerController extends ResponseEntityExceptionHandler {
     //Todo - to be fixed when submission tool is changed
     @ExceptionHandler(HttpClientErrorException.class)
     public ResponseEntity<Object> handleCustomException(HttpClientErrorException ex) throws Exception {
-        //return new ResponseEntity<>(ex.getResponseBodyAsString(), ex.getStatusCode());
-        throw new Exception(ex.getMessage(), ex);
+        return new ResponseEntity<>(ex.getResponseBodyAsString(), HttpStatus.INTERNAL_SERVER_ERROR);
     }
 }
