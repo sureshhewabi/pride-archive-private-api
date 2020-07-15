@@ -7,7 +7,7 @@ import org.springframework.hateoas.mvc.ControllerLinkBuilder;
 import org.springframework.hateoas.mvc.ResourceAssemblerSupport;
 import org.springframework.security.core.Authentication;
 import uk.ac.ebi.pride.archive.repo.models.project.Project;
-import uk.ac.ebi.pride.ws.pride.controllers.project.ProjectController;
+import uk.ac.ebi.pride.ws.pride.controllers.ProjectController;
 import uk.ac.ebi.pride.ws.pride.models.dataset.PrideProject;
 import uk.ac.ebi.pride.ws.pride.models.dataset.ProjectResource;
 import uk.ac.ebi.pride.ws.pride.transformers.Transformer;

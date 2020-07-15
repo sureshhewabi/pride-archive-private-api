@@ -1,10 +1,9 @@
-package uk.ac.ebi.pride.ws.pride.controllers.project;
+package uk.ac.ebi.pride.ws.pride.controllers;
 
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.hateoas.PagedResources;
 import org.springframework.http.*;
@@ -19,11 +18,10 @@ import uk.ac.ebi.pride.ws.pride.assemblers.PrideProjectResourceAssembler;
 import uk.ac.ebi.pride.ws.pride.assemblers.ProjectFileResourceAssembler;
 import uk.ac.ebi.pride.ws.pride.models.dataset.ProjectResource;
 import uk.ac.ebi.pride.ws.pride.models.file.PrideFileResource;
-import uk.ac.ebi.pride.ws.pride.models.user.PublishProject;
-import uk.ac.ebi.pride.ws.pride.models.user.PublishProjectRequest;
+import uk.ac.ebi.pride.ws.pride.models.project.PublishProject;
+import uk.ac.ebi.pride.ws.pride.models.project.PublishProjectRequest;
 import uk.ac.ebi.pride.ws.pride.service.project.FileStorageService;
 import uk.ac.ebi.pride.ws.pride.service.project.ProjectService;
-import uk.ac.ebi.pride.ws.pride.service.user.AAPService;
 import uk.ac.ebi.pride.ws.pride.utils.APIError;
 import uk.ac.ebi.pride.ws.pride.utils.PrideSupportEmailSender;
 import uk.ac.ebi.pride.ws.pride.utils.WsContastants;
@@ -51,14 +49,13 @@ public class ProjectController {
 
     final private ProjectService projectService;
     final private FileStorageService fileStorageService;
-    final private AAPService aapService;
     private final PrideSupportEmailSender prideSupportEmailSender;
 
-    @Autowired
-    public ProjectController(ProjectService projectService, FileStorageService fileStorageService, AAPService aapService, PrideSupportEmailSender prideSupportEmailSender) {
+    public ProjectController(ProjectService projectService,
+                             FileStorageService fileStorageService,
+                             PrideSupportEmailSender prideSupportEmailSender) {
         this.projectService = projectService;
         this.fileStorageService = fileStorageService;
-        this.aapService = aapService;
         this.prideSupportEmailSender = prideSupportEmailSender;
     }
 
@@ -259,9 +256,7 @@ public class ProjectController {
 
         List<ProjectFile> projectFiles = privateProject.isPresent() ? projectService.findProjectFiles(projectAccession) : new ArrayList<>();
 
-        String token = aapService.getAAPToken();
-
-        ProjectFileResourceAssembler assembler = new ProjectFileResourceAssembler(token, projectAccession, ProjectController.class, PrideFileResource.class);
+        ProjectFileResourceAssembler assembler = new ProjectFileResourceAssembler(projectAccession, ProjectController.class, PrideFileResource.class);
 
         List<PrideFileResource> resources = assembler.toResources(projectFiles);
 
@@ -302,6 +297,7 @@ public class ProjectController {
     })
     @RequestMapping(value = "/projects/private/{projectId}/files/{fileId}", method = RequestMethod.GET,
             produces = {MediaType.APPLICATION_OCTET_STREAM_VALUE})
+    @PreAuthorize("isAuthenticated()")
     public HttpEntity<Resource> getFileByProject(@PathVariable(value = "projectId") String accession,
                                                  @PathVariable(value = "fileId") Long fileId,
                                                  @RequestParam(value = "token", required = true) String token) throws Exception {

@@ -14,7 +14,7 @@ import org.springframework.stereotype.Component;
 import uk.ac.ebi.pride.archive.repo.models.user.User;
 import uk.ac.ebi.pride.archive.repo.models.user.UserSummary;
 import uk.ac.ebi.pride.ws.pride.models.feedback.Feedback;
-import uk.ac.ebi.pride.ws.pride.models.user.PublishProject;
+import uk.ac.ebi.pride.ws.pride.models.project.PublishProject;
 
 import java.io.BufferedReader;
 import java.io.IOException;

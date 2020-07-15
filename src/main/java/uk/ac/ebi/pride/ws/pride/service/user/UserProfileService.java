@@ -1,8 +1,11 @@
 package uk.ac.ebi.pride.ws.pride.service.user;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
 import uk.ac.ebi.pride.archive.repo.client.UserProfileRepoClient;
+import uk.ac.ebi.pride.archive.repo.models.user.Credentials;
 import uk.ac.ebi.pride.archive.repo.models.user.User;
 import uk.ac.ebi.pride.archive.repo.models.user.UserProfile;
 import uk.ac.ebi.pride.archive.repo.models.user.UserSummary;
@@ -31,40 +34,24 @@ public class UserProfileService {
         this.registrationEmailActionNeededTemplate = registrationEmailActionNeededTemplate;
     }
 
-    public String registerNewUser(UserSummary userSummary) {
+    public String registerNewUser(UserSummary userSummary) throws Exception {
         log.info("Entered registerNewUser : " + userSummary.getEmail());
         try {
             User user = userProfileRepoClient.register(userSummary);
-
             log.info("Begin user email trigger");
-            prideSupportEmailSender.sendRegistrationEmail(ObjectMapper.mapUserSummaryToUser(userSummary), user.getPassword(), registrationEmailTemplate);
+            prideSupportEmailSender.sendRegistrationEmail(user,user.getPassword(), registrationEmailTemplate);
             log.info("Exiting registerNewUser");
-            return user.getUserRef();
-        } catch (Exception e) {
-            log.info("User already exists in AAP but not in PRIDE. Sending email to take action for: " + userSummary.getEmail());
-            prideSupportEmailSender.sendRegistrationEmailActionNeeded(ObjectMapper.mapUserSummaryToUser(userSummary), registrationEmailActionNeededTemplate);
+            return userSummary.getUserRef();
+        } catch (HttpClientErrorException e) {
+            if (e.getStatusCode().equals(HttpStatus.CONFLICT)) {
+                log.info("User already exists in AAP but not in PRIDE. Sending email to take action for: " + userSummary.getEmail());
+                prideSupportEmailSender.sendRegistrationEmailActionNeeded(ObjectMapper.mapUserSummaryToUser(userSummary), registrationEmailActionNeededTemplate);
+            } else {
+                throw e;
+            }
         }
         return "";
     }
-
-    /*public void changePassword(String userReference, ChangePassword changePassword) throws Exception {
-        User user = userRepository.findByUserRef(userReference);
-        user.setPassword(changePassword.getNewPassword());
-        //update in aap
-        boolean isChangeSuccessful = aapService.changeAAPPassword(userReference, changePassword);
-        if (isChangeSuccessful) {
-            //update in pride
-            user = userRepository.save(user);
-            UserSummary userSummary = new UserSummary();
-            userSummary.setEmail(user.getEmail());
-            userSummary.setFirstName(user.getFirstName());
-            userSummary.setLastName(user.getLastName());
-            userSummary.setPassword(user.getPassword());
-            prideSupportEmailSender.sendPasswordChangeEmail(userSummary, passwordChangeEmailTemplate);
-        } else {
-            throw new Exception("Failed to update pwd in AAP");
-        }
-    }*/
 
     public boolean updateProfile(String token, UserProfile userProfile) throws Exception {
         return userProfileRepoClient.updateProfile(userProfile, token);
@@ -73,5 +60,9 @@ public class UserProfileService {
 
     public UserSummary getProfile(String jwtToken) throws Exception {
         return userProfileRepoClient.viewProfile(jwtToken);
+    }
+
+    public String getAAPToken(Credentials credentials) throws Exception {
+        return userProfileRepoClient.getAAPToken(credentials);
     }
 }

@@ -9,7 +9,7 @@ import org.springframework.util.DigestUtils;
 import uk.ac.ebi.pride.archive.dataprovider.param.CvParam;
 import uk.ac.ebi.pride.archive.dataprovider.utils.MSFileTypeConstants;
 import uk.ac.ebi.pride.archive.repo.models.file.ProjectFile;
-import uk.ac.ebi.pride.ws.pride.controllers.project.ProjectController;
+import uk.ac.ebi.pride.ws.pride.controllers.ProjectController;
 import uk.ac.ebi.pride.ws.pride.models.file.PrideFile;
 import uk.ac.ebi.pride.ws.pride.models.file.PrideFileResource;
 
@@ -22,13 +22,11 @@ import java.util.List;
 @Slf4j
 public class ProjectFileResourceAssembler extends ResourceAssemblerSupport<ProjectFile, PrideFileResource> {
 
-    String token;
     String accession;
 
-    public ProjectFileResourceAssembler(String token, String projectAccession, Class<?> controller, Class<PrideFileResource> resourceType) {
+    public ProjectFileResourceAssembler(String projectAccession, Class<?> controller, Class<PrideFileResource> resourceType) {
         super(controller, resourceType);
         this.accession = projectAccession;
-        this.token = token;
     }
 
     @SneakyThrows
