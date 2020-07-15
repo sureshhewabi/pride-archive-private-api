@@ -297,7 +297,6 @@ public class ProjectController {
     })
     @RequestMapping(value = "/projects/private/{projectId}/files/{fileId}", method = RequestMethod.GET,
             produces = {MediaType.APPLICATION_OCTET_STREAM_VALUE})
-    @PreAuthorize("isAuthenticated()")
     public HttpEntity<Resource> getFileByProject(@PathVariable(value = "projectId") String accession,
                                                  @PathVariable(value = "fileId") Long fileId,
                                                  @RequestParam(value = "token", required = true) String token) throws Exception {
