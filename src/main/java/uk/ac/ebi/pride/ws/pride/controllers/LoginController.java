@@ -44,7 +44,8 @@ public class LoginController {
             jwtToken = userProfileService.getAAPToken(credentials);
         } catch (Exception e) {
             if (e instanceof HttpClientErrorException) {
-                log.error(((HttpClientErrorException) e).getResponseBodyAsString(), e);
+                String s = "Username/password wrong : " + email;
+                log.info(s);
                 throw e;
             }
             String message = "Error while getting AAP token : " + email;

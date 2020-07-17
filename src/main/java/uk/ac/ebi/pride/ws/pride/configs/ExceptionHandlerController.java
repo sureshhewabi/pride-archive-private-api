@@ -18,6 +18,8 @@ import java.util.stream.Collectors;
 @RestControllerAdvice
 public class ExceptionHandlerController extends ResponseEntityExceptionHandler {
 
+    public static final String USERNAME_PASSWORD_WRONG = "username/password wrong";
+
     @Bean
     public ErrorAttributes errorAttributes() {
         // Hide exception field in the return object
@@ -42,6 +44,10 @@ public class ExceptionHandlerController extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler(HttpClientErrorException.class)
     public ResponseEntity<Object> handleHttpClientErrorException(HttpClientErrorException ex) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getResponseBodyAsString());
+        String error = ex.getResponseBodyAsString();
+        if(error.contains(USERNAME_PASSWORD_WRONG)){
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+        }
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
 }
