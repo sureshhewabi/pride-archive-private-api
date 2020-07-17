@@ -5,6 +5,7 @@ import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.binary.Base64;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -23,8 +24,9 @@ import java.nio.charset.Charset;
 @Slf4j
 public class LoginController {
 
-    private UserProfileService userProfileService;
+    private final UserProfileService userProfileService;
 
+    @Autowired
     public LoginController(UserProfileService userProfileService) {
         this.userProfileService = userProfileService;
     }
@@ -42,12 +44,11 @@ public class LoginController {
         String email = credentials.getUsername();
         try {
             jwtToken = userProfileService.getAAPToken(credentials);
+        } catch (HttpClientErrorException e) {
+            String s = "Username/password wrong : " + email;
+            log.info(s);
+            throw e;
         } catch (Exception e) {
-            if (e instanceof HttpClientErrorException) {
-                String s = "Username/password wrong : " + email;
-                log.info(s);
-                throw e;
-            }
             String message = "Error while getting AAP token : " + email;
             log.error(message);
             throw new RuntimeException(message, e);

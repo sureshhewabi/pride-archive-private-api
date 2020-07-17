@@ -27,12 +27,12 @@ pride.support:
   smtp.server: smtp.ebi.ac.uk
   email.address: pride-support@ebi.ac.uk
 
-app.name: pride-archive-private-ws
-pride-repo:
-  api.baseUrl: $apiBaseUrl
-  api.keyName: $apiKeyName
-  api.keyValue: $apiKeyValue
-
+app.name: pride-private-API
+pride-repo.api:
+  baseUrl: $apiBaseUrl
+  keyName: $apiKeyName
+  keyValue: $apiKeyValue
+jwt.certificate: $aap_jwt_cer
 
   # PRIDE urls for email sender
 pride:

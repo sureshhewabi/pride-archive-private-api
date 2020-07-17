@@ -1,14 +1,12 @@
 package uk.ac.ebi.pride.ws.pride.service.user;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import uk.ac.ebi.pride.archive.repo.client.UserProfileRepoClient;
-import uk.ac.ebi.pride.archive.repo.models.user.Credentials;
-import uk.ac.ebi.pride.archive.repo.models.user.User;
-import uk.ac.ebi.pride.archive.repo.models.user.UserProfile;
-import uk.ac.ebi.pride.archive.repo.models.user.UserSummary;
+import uk.ac.ebi.pride.archive.repo.models.user.*;
 import uk.ac.ebi.pride.archive.repo.util.ObjectMapper;
 import uk.ac.ebi.pride.ws.pride.utils.PrideSupportEmailSender;
 
@@ -24,10 +22,10 @@ public class UserProfileService {
 
     private String registrationEmailActionNeededTemplate;
 
+    @Autowired
     public UserProfileService(UserProfileRepoClient userProfileRepoClient,
                               PrideSupportEmailSender prideSupportEmailSender,
-                              String registrationEmailTemplate, String registrationEmailActionNeededTemplate,
-                              String passwordChangeEmailTemplate) {
+                              String registrationEmailTemplate, String registrationEmailActionNeededTemplate) {
         this.userProfileRepoClient = userProfileRepoClient;
         this.prideSupportEmailSender = prideSupportEmailSender;
         this.registrationEmailTemplate = registrationEmailTemplate;
@@ -57,12 +55,15 @@ public class UserProfileService {
         return userProfileRepoClient.updateProfile(userProfile, token);
     }
 
-
     public UserSummary getProfile(String jwtToken) throws Exception {
         return userProfileRepoClient.viewProfile(jwtToken);
     }
 
     public String getAAPToken(Credentials credentials) throws Exception {
         return userProfileRepoClient.getAAPToken(credentials);
+    }
+
+    public String resetPassword(ResetPassword resetPassword) throws Exception {
+        return userProfileRepoClient.resetPassword(resetPassword);
     }
 }

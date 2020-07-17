@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.HttpClientErrorException;
+import uk.ac.ebi.pride.archive.repo.models.user.ResetPassword;
 import uk.ac.ebi.pride.archive.repo.models.user.UserProfile;
 import uk.ac.ebi.pride.archive.repo.models.user.UserSummary;
 import uk.ac.ebi.pride.ws.pride.service.user.UserProfileService;
@@ -21,8 +22,12 @@ import javax.servlet.http.HttpServletRequest;
 @Slf4j
 public class UserProfileController {
 
+    private final UserProfileService userProfileService;
+
     @Autowired
-    private UserProfileService userProfileService;
+    public UserProfileController(UserProfileService userProfileService) {
+        this.userProfileService = userProfileService;
+    }
 
     @ApiOperation(notes = "Register a new user", value = "registration", nickname = "registerNewUser", tags = {"User"})
     @RequestMapping(method = RequestMethod.POST, path = "/register", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
@@ -78,6 +83,12 @@ public class UserProfileController {
             log.error(ex.getMessage(), ex);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ex.getMessage());
         }
+    }
+
+    @ApiOperation(notes = "Reset password", value = "resetPassword", nickname = "resetPassword", tags = {"User"})
+    @PostMapping(path = "/reset-password")
+    public String resetPassword(@RequestBody ResetPassword resetPassword) throws Exception {
+        return userProfileService.resetPassword(resetPassword);
     }
 
     private String getToken(HttpServletRequest request) {
