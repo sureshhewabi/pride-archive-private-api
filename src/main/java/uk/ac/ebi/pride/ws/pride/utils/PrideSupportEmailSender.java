@@ -260,7 +260,7 @@ public class PrideSupportEmailSender {
 
     @Bean("registrationEmailActionNeededTemplate")
     public String getRegistrationEmailActionNeededTemplate() throws IOException {
-        Resource emailTemplateResource = resourceLoader.getResource("classpath:email-template/registrationp-action-needed.template");
+        Resource emailTemplateResource = resourceLoader.getResource("classpath:email-template/registration-action-needed.template");
         return getEmailTemplate(emailTemplateResource);
     }
 
