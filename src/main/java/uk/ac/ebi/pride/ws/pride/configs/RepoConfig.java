@@ -23,11 +23,6 @@ public class RepoConfig {
     }
 
     @Bean
-    public AssayRepoClient getAssayRepoClient() {
-        return prideRepoClientFactory.getAssayRepoClient();
-    }
-
-    @Bean
     public FileRepoClient getFileRepoClient() {
         return prideRepoClientFactory.getFileRepoClient();
     }
