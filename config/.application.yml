@@ -29,9 +29,9 @@ pride.support:
 
 app.name: pride-private-API
 pride-repo.api:
-  baseUrl: $apiBaseUrl
-  keyName: $apiKeyName
-  keyValue: $apiKeyValue
+  baseUrl: $repo_api_base_url
+  keyName: $repo_api_key_name
+  keyValue: $repo_api_key_value
 jwt.certificate: $aap_jwt_cer
 
   # PRIDE urls for email sender
