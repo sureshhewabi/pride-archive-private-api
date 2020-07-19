@@ -7,7 +7,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
@@ -42,12 +42,12 @@ public class ExceptionHandlerController extends ResponseEntityExceptionHandler {
         return new ResponseEntity<>(s, HttpStatus.BAD_REQUEST);
     }
 
-    @ExceptionHandler(HttpClientErrorException.class)
-    public ResponseEntity<Object> handleHttpClientErrorException(HttpClientErrorException ex) {
+    @ExceptionHandler(HttpStatusCodeException.class)
+    public ResponseEntity<Object> handleHttpClientErrorException(HttpStatusCodeException ex) {
         String error = ex.getResponseBodyAsString();
-        if(error.contains(USERNAME_PASSWORD_WRONG)){
+        if (error.contains(USERNAME_PASSWORD_WRONG)) { //this is just a temporary fix for submission tool to receive exception
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
         }
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+        return ResponseEntity.status(ex.getStatusCode()).body(error);
     }
 }
