@@ -1,5 +1,6 @@
 package uk.ac.ebi.pride.ws.pride.assemblers;
 
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.hateoas.Link;
 import org.springframework.hateoas.mvc.ControllerLinkBuilder;
@@ -7,34 +8,34 @@ import org.springframework.hateoas.mvc.ResourceAssemblerSupport;
 import org.springframework.util.DigestUtils;
 import uk.ac.ebi.pride.archive.dataprovider.param.CvParam;
 import uk.ac.ebi.pride.archive.dataprovider.utils.MSFileTypeConstants;
-import uk.ac.ebi.pride.archive.repo.repos.file.ProjectFile;
-import uk.ac.ebi.pride.ws.pride.controllers.project.ProjectController;
+import uk.ac.ebi.pride.archive.repo.models.file.ProjectFile;
+import uk.ac.ebi.pride.ws.pride.controllers.ProjectController;
 import uk.ac.ebi.pride.ws.pride.models.file.PrideFile;
 import uk.ac.ebi.pride.ws.pride.models.file.PrideFileResource;
 
 import java.util.ArrayList;
 import java.util.List;
+
 /**
  * @author ypriverol
  */
 @Slf4j
 public class ProjectFileResourceAssembler extends ResourceAssemblerSupport<ProjectFile, PrideFileResource> {
 
-    String token;
     String accession;
 
-    public ProjectFileResourceAssembler(String token, String projectAccession, Class<?> controller, Class<PrideFileResource> resourceType) {
+    public ProjectFileResourceAssembler(String projectAccession, Class<?> controller, Class<PrideFileResource> resourceType) {
         super(controller, resourceType);
         this.accession = projectAccession;
-        this.token = token;
     }
 
+    @SneakyThrows
     @Override
     public PrideFileResource toResource(ProjectFile oracleFile) {
 
         MSFileTypeConstants fileType = MSFileTypeConstants.OTHER;
-        for(MSFileTypeConstants currentFileType: MSFileTypeConstants.values())
-            if(currentFileType.getFileType().getName().equalsIgnoreCase(oracleFile.getFileType().getName()))
+        for (MSFileTypeConstants currentFileType : MSFileTypeConstants.values())
+            if (currentFileType.getFileType().getName().equalsIgnoreCase(oracleFile.getFileType().getName()))
                 fileType = currentFileType;
 
         String fileName = accession + "/" + "submitted" + "/" + oracleFile.getFileName();
@@ -59,7 +60,7 @@ public class ProjectFileResourceAssembler extends ResourceAssemblerSupport<Proje
 
         List<PrideFileResource> datasets = new ArrayList<>();
 
-        for(ProjectFile mongoFile: entities){
+        for (ProjectFile mongoFile : entities) {
             datasets.add(toResource(mongoFile));
         }
 

@@ -1,4 +1,4 @@
-package uk.ac.ebi.pride.ws.pride.models.user;
+package uk.ac.ebi.pride.ws.pride.models.project;
 
 import lombok.Builder;
 

@@ -11,10 +11,10 @@ import org.springframework.mail.MailException;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Component;
-import uk.ac.ebi.pride.archive.repo.repos.user.User;
-import uk.ac.ebi.pride.archive.repo.services.user.UserSummary;
+import uk.ac.ebi.pride.archive.repo.models.user.User;
+import uk.ac.ebi.pride.archive.repo.models.user.UserSummary;
 import uk.ac.ebi.pride.ws.pride.models.feedback.Feedback;
-import uk.ac.ebi.pride.ws.pride.models.user.PublishProject;
+import uk.ac.ebi.pride.ws.pride.models.project.PublishProject;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -260,7 +260,7 @@ public class PrideSupportEmailSender {
 
     @Bean("registrationEmailActionNeededTemplate")
     public String getRegistrationEmailActionNeededTemplate() throws IOException {
-        Resource emailTemplateResource = resourceLoader.getResource("classpath:email-template/registrationp-action-needed.template");
+        Resource emailTemplateResource = resourceLoader.getResource("classpath:email-template/registration-action-needed.template");
         return getEmailTemplate(emailTemplateResource);
     }
 
