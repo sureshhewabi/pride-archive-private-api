@@ -44,10 +44,10 @@ public class LoginController {
         String email = credentials.getUsername();
         try {
             jwtToken = userProfileService.getAAPToken(credentials);
-        } catch (HttpClientErrorException e) {
+        } catch (HttpClientErrorException httpException) {
             String s = "Username/password wrong : " + email;
             log.info(s);
-            throw e;
+            throw httpException;
         } catch (Exception e) {
             String message = "Error while getting AAP token : " + email;
             log.error(message);

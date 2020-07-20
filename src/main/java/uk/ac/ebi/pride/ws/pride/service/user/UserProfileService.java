@@ -1,12 +1,16 @@
 package uk.ac.ebi.pride.ws.pride.service.user;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import uk.ac.ebi.pride.archive.repo.client.UserProfileRepoClient;
-import uk.ac.ebi.pride.archive.repo.models.user.*;
+import uk.ac.ebi.pride.archive.repo.models.user.ChangePassword;
+import uk.ac.ebi.pride.archive.repo.models.user.Credentials;
+import uk.ac.ebi.pride.archive.repo.models.user.ResetPassword;
+import uk.ac.ebi.pride.archive.repo.models.user.User;
+import uk.ac.ebi.pride.archive.repo.models.user.UserProfile;
+import uk.ac.ebi.pride.archive.repo.models.user.UserSummary;
 import uk.ac.ebi.pride.archive.repo.util.ObjectMapper;
 import uk.ac.ebi.pride.ws.pride.utils.PrideSupportEmailSender;
 
@@ -22,14 +26,17 @@ public class UserProfileService {
 
     private String registrationEmailActionNeededTemplate;
 
-    @Autowired
+    private String passwordChangeEmailTemplate;
+
     public UserProfileService(UserProfileRepoClient userProfileRepoClient,
                               PrideSupportEmailSender prideSupportEmailSender,
-                              String registrationEmailTemplate, String registrationEmailActionNeededTemplate) {
+                              String registrationEmailTemplate, String registrationEmailActionNeededTemplate,
+                              String passwordChangeEmailTemplate) {
         this.userProfileRepoClient = userProfileRepoClient;
         this.prideSupportEmailSender = prideSupportEmailSender;
         this.registrationEmailTemplate = registrationEmailTemplate;
         this.registrationEmailActionNeededTemplate = registrationEmailActionNeededTemplate;
+        this.passwordChangeEmailTemplate = passwordChangeEmailTemplate;
     }
 
     public String registerNewUser(UserSummary userSummary) throws Exception {
@@ -37,7 +44,7 @@ public class UserProfileService {
         try {
             User user = userProfileRepoClient.register(userSummary);
             log.info("Begin user email trigger");
-            prideSupportEmailSender.sendRegistrationEmail(user,user.getPassword(), registrationEmailTemplate);
+            prideSupportEmailSender.sendRegistrationEmail(user, user.getPassword(), registrationEmailTemplate);
             log.info("Exiting registerNewUser");
             return userSummary.getUserRef();
         } catch (HttpClientErrorException e) {
@@ -65,5 +72,10 @@ public class UserProfileService {
 
     public String resetPassword(ResetPassword resetPassword) throws Exception {
         return userProfileRepoClient.resetPassword(resetPassword);
+    }
+
+    public void changePassword(String token, ChangePassword changePassword) throws Exception {
+        UserSummary userSummary = userProfileRepoClient.changePassword(changePassword, token);
+        prideSupportEmailSender.sendPasswordChangeEmail(userSummary, passwordChangeEmailTemplate);
     }
 }
