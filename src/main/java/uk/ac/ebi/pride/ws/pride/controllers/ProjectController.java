@@ -162,7 +162,7 @@ public class ProjectController {
         return new ResponseEntity<>(WsContastants.PUBLISH_PROJECT_OK, HttpStatus.OK);
     }
 
-    @ApiOperation(notes = "To publish private PRIDE Archive Project submitted by another user",
+   /* @ApiOperation(notes = "To publish private PRIDE Archive Project submitted by another user",
             value = "publish others private project", nickname = "publishOtherPrivateProject", tags = {"projects"})
     @ApiResponses({
             @ApiResponse(code = 200, message = "OK", response = APIError.class),
@@ -185,7 +185,7 @@ public class ProjectController {
             return new ResponseEntity<>(WsContastants.PUBLISH_PROJECT_NOK, HttpStatus.INTERNAL_SERVER_ERROR);
         }
         return new ResponseEntity<>(WsContastants.PUBLISH_PROJECT_OK, HttpStatus.OK);
-    }
+    }*/
 
     @ApiOperation(notes = "List of PRIDE Archive Projects accessible to reviewer. User needs to be authenticated to view these submissions",
             value = "reviewer projects", nickname = "getReviewerSubmissions", tags = {"projects"})
