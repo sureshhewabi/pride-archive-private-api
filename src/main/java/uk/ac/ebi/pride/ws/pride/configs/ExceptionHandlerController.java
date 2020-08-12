@@ -44,10 +44,6 @@ public class ExceptionHandlerController extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler(HttpStatusCodeException.class)
     public ResponseEntity<Object> handleHttpClientErrorException(HttpStatusCodeException ex) {
-        String error = ex.getResponseBodyAsString();
-        if (error.contains(USERNAME_PASSWORD_WRONG)) { //this is just a temporary fix for submission tool to receive exception
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
-        }
-        return ResponseEntity.status(ex.getStatusCode()).body(error);
+        return ResponseEntity.status(ex.getStatusCode()).body(ex.getResponseBodyAsString());
     }
 }
