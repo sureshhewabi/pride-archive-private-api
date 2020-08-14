@@ -1,3 +1,5 @@
+spring.application.name: $app_name
+
 server:
   port: $port
   servlet.contextPath: /pride/private/ws/archive/v2

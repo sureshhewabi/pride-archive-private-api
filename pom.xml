@@ -22,6 +22,7 @@
         <pride-repo-client>0.0.1-SNAPSHOT</pride-repo-client>
         <io.springfox.swagger.version>2.7.0</io.springfox.swagger.version>
         <aapClientVersion>1.0.3-SNAPSHOT</aapClientVersion>
+        <jarFinalName>pride-private-api</jarFinalName>
     </properties>
 
     <dependencies>
@@ -152,7 +153,23 @@
     </dependencies>
 
     <build>
+        <finalName>${jarFinalName}</finalName>
         <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <excludeDevtools>true</excludeDevtools>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>repackage</id>
+                        <goals>
+                            <goal>repackage</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
             <plugin>
                 <artifactId>maven-resources-plugin</artifactId>
                 <version>2.7</version>
@@ -177,13 +194,6 @@
                         </configuration>
                     </execution>
                 </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-maven-plugin</artifactId>
-                <configuration>
-                    <excludeDevtools>true</excludeDevtools>
-                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
