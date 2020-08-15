@@ -106,9 +106,6 @@ spec:
       labels:
         app: $app_name-filebeat
     spec:
-      securityContext:
-        runAsUser: $NFS_UID
-        runAsGroup: $NFS_GID
       volumes:
         - name: logvolume
           nfs:
