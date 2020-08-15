@@ -47,6 +47,8 @@ spec:
           ports:
             - containerPort: $port
           env:
+            - name: JAVA_OPTS
+              value: "${JVM_OPTS}"
             - name: APM_AGENT_OPTS
               value: "-javaagent:${APM_AGENT_JAR} -Delastic.apm.service_name=${app_name} -Delastic.apm.application_packages=${APM_PACKAGE} -Delastic.apm.server_urls=${APM_SERVER}"
           volumeMounts:
