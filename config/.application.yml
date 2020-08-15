@@ -24,9 +24,9 @@ logging:
 spring.jackson.default-property-inclusion: NON_NULL
 
 #email properties
-spring.mail.host: smtp.ebi.ac.uk
+spring.mail.host: $smtp_host
 pride.support:
-  smtp.server: smtp.ebi.ac.uk
+  smtp.server: $smtp_host
   email.address: pride-support@ebi.ac.uk
 
 app.name: pride-private-API
@@ -36,7 +36,7 @@ pride-repo.api:
   keyValue: $repo_api_key_value
 jwt.certificate: $aap_jwt_cer
 
-  # PRIDE urls for email sender
+# PRIDE urls for email sender
 pride:
   url: https://www.ebi.ac.uk/pride
   login_url: https://www.ebi.ac.uk/pride/login
