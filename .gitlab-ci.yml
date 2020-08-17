@@ -30,9 +30,10 @@ docker_build:
     - docker push $IMAGE
   when: manual
 
-kube_deploy_prod_hh:
-  environment: prod-k8s-hh
-  extends: .kube_deploy_script
+#shouldn't be depolyed to HH as NFS sync is not real-time
+#kube_deploy_prod_hh:
+#  environment: prod-k8s-hh
+#  extends: .kube_deploy_script
 
 kube_deploy_prod_hx:
   environment: prod-k8s-hx
