@@ -24,6 +24,9 @@ RUN addgroup --gid "$GID" "$USER" \
    --uid "$UID" \
    "$USER"
 
+RUN addgroup -g ${NFS_GID2}  group2
+RUN addgroup $USER group2
+
 WORKDIR /app
 COPY --from=build-env /app/target/${JAR_FILE_NAME}.jar ./
 COPY ${APM_AGENT_JAR} ./

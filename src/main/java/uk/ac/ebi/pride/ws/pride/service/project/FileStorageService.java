@@ -1,13 +1,12 @@
 package uk.ac.ebi.pride.ws.pride.service.project;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
-import org.springframework.core.io.UrlResource;
 import org.springframework.stereotype.Service;
 import uk.ac.ebi.pride.ws.pride.configs.FileStorageProperties;
 
 import java.net.MalformedURLException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -26,7 +25,7 @@ public class FileStorageService {
     public Resource loadFileAsResource(String fileName) throws Exception {
         try {
             Path filePath = this.fileStorageLocation.resolve(fileName).normalize();
-            Resource resource = new UrlResource(filePath.toUri());
+            Resource resource = new FileSystemResource(filePath.toString());
             if(resource.exists()) {
                 return resource;
             } else {
