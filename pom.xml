@@ -19,7 +19,7 @@
         <uk.ac.ebi.pride.architectural-pride-spring.version>1.0.0-SNAPSHOT</uk.ac.ebi.pride.architectural-pride-spring.version>
         <uk.ac.ebi.pride.archive.utilities.version>2.0.19-SNAPSHOT</uk.ac.ebi.pride.archive.utilities.version>
         <uk.ac.ebi.pride.utilities.client>2.13-SNAPSHOT</uk.ac.ebi.pride.utilities.client>
-        <pride-repo-client>0.0.1-SNAPSHOT</pride-repo-client>
+        <pride-repo-client>1.1.0-SNAPSHOT</pride-repo-client>
         <io.springfox.swagger.version>2.7.0</io.springfox.swagger.version>
         <aapClientVersion>1.0.3-SNAPSHOT</aapClientVersion>
         <jarFinalName>pride-private-api</jarFinalName>
