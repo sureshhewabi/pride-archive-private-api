@@ -41,8 +41,8 @@ submission-api:
   publication-url: $submission_api_publication_url
   user: $submission_api_user
   password: $submission_api_password
-proxy-host: $proxy_host
-proxy-port: $proxy_port
+proxy-host: $http_proxy_host
+proxy-port: $http_proxy_port
 
 # PRIDE urls for email sender
 pride:
