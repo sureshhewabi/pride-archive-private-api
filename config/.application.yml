@@ -36,6 +36,14 @@ pride-repo.api:
   keyValue: $repo_api_key_value
 jwt.certificate: $aap_jwt_cer
 
+submission-api:
+  login-url: $submission_api_login_url
+  publication-url: $submission_api_publication_url
+  user: $submission_api_user
+  password: $submission_api_password
+proxy-host: $proxy_host
+proxy-port: $proxy_port
+
 # PRIDE urls for email sender
 pride:
   url: https://www.ebi.ac.uk/pride
