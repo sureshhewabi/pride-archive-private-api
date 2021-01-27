@@ -193,14 +193,26 @@ public class ProjectController {
             headers.setAccept(Arrays.asList(MediaType.ALL));
             headers.set("Authorization", "Bearer " + token);
             HttpEntity<MultiValueMap<String, String>> publicationRequestEntity = new HttpEntity(headers);
-            String publicationUrl = submissionApiConfig.getPublicationUrl() + "?force=true&verifyCommand=true&accession=" + projectAccession;
+            String publicationUrl = submissionApiConfig.getPublicationUrl() + "?force=true&verifyCommand=false&accession=" + projectAccession;
             String doi = publishProjectRequest.getDoi();
             String pubmedId = publishProjectRequest.getPubmedId();
             if (doi != null && !doi.trim().isEmpty()) {
-                publicationUrl += "&doi=" + doi.trim();
+                String doiBaseUrl = "https://doi.org/";
+                doi = doi.trim();
+                if(doi.startsWith(doiBaseUrl)) {
+                    doi = doi.replaceAll(doiBaseUrl, "");
+                }
+                String DOIREGEX = "^10\\.\\d{4,9}\\/[-._;()/:a-zA-Z0-9]+$";
+                if(doi.matches(DOIREGEX)) {
+                    publicationUrl += "&doi=" + doi;
+                }
             }
             if (pubmedId != null && !pubmedId.trim().isEmpty()) {
-                publicationUrl += "&pubmedId=" + pubmedId.trim();
+                pubmedId = pubmedId.trim();
+                String PUBMIDID_REGEX = "^\\d{7,8}$";
+                if(pubmedId.matches(PUBMIDID_REGEX)) {
+                    publicationUrl += "&pubmedId=" + pubmedId;
+                }
             }
             ResponseEntity<String> response = proxyRestTemplate.postForEntity(publicationUrl, publicationRequestEntity, String.class);
             if (response.getStatusCode() == HttpStatus.OK) {
