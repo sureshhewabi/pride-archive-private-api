@@ -197,10 +197,13 @@ public class ProjectController {
             String doi = publishProjectRequest.getDoi();
             String pubmedId = publishProjectRequest.getPubmedId();
             if (doi != null && !doi.trim().isEmpty()) {
-                String doiBaseUrl = "https://doi.org/";
-                doi = doi.trim();
-                if(doi.startsWith(doiBaseUrl)) {
-                    doi = doi.replaceAll(doiBaseUrl, "");
+                String doiUppercase = doi.trim().toUpperCase();
+                if (doiUppercase.contains("HTTP") || doiUppercase.contains("DOI.ORG")) { // strip protocol and domain
+                    doi = doiUppercase.replaceFirst("((HTTP|HTTPS)://)?(DX\\.)?DOI\\.ORG/", "");
+                } else if(doiUppercase.contains("DOI:")) { // strip protocol
+                    doi = doiUppercase.replaceFirst("DOI:", "");
+                } else {
+                    doi = doiUppercase;
                 }
                 String DOIREGEX = "^10\\.\\d{4,9}\\/[-._;()/:a-zA-Z0-9]+$";
                 if(doi.matches(DOIREGEX)) {
