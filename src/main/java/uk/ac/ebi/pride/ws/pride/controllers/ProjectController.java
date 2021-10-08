@@ -16,6 +16,7 @@ import org.springframework.util.DigestUtils;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
+import uk.ac.ebi.pride.archive.repo.client.ProjectRepoClient;
 import uk.ac.ebi.pride.archive.repo.models.file.ProjectFile;
 import uk.ac.ebi.pride.archive.repo.models.project.Project;
 import uk.ac.ebi.pride.utilities.util.Tuple;
@@ -57,17 +58,19 @@ public class ProjectController {
     private final RestTemplate proxyRestTemplate;
     private final SubmissionApiConfig submissionApiConfig;
     private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ProjectRepoClient projectRepoClient;
 
     public ProjectController(ProjectService projectService,
                              FileStorageService fileStorageService,
                              PrideSupportEmailSender prideSupportEmailSender,
                              @Qualifier("proxyRestTemplate") RestTemplate proxyRestTemplate,
-                             SubmissionApiConfig submissionApiConfig) {
+                             SubmissionApiConfig submissionApiConfig, ProjectRepoClient projectRepoClient) {
         this.projectService = projectService;
         this.fileStorageService = fileStorageService;
         this.prideSupportEmailSender = prideSupportEmailSender;
         this.proxyRestTemplate = proxyRestTemplate;
         this.submissionApiConfig = submissionApiConfig;
+        this.projectRepoClient = projectRepoClient;
     }
 
     @ApiOperation(notes = "List of Private PRIDE Archive Projects submitted by the user. User needs to be authenticated to view his private submissions",
@@ -164,12 +167,12 @@ public class ProjectController {
                 .publishJustification(publishProjectRequest.getPublishJustification())
                 .authorized(true).userName(currentUser.getEmail()).build();
 
-        try {
-            sendPublicationRequestToSubmissionApi(projectAccession, publishProjectRequest);
-        } catch (Exception ex) {
-            log.error("Failed to login or send publication request to submission-api for accession : " + projectAccession);
-            log.error(ex.getMessage(), ex);
-        }
+//        try {
+//            sendPublicationRequestToSubmissionApi(projectAccession, publishProjectRequest);
+//        } catch (Exception ex) {
+//            log.error("Failed to login or send publication request to submission-api for accession : " + projectAccession);
+//            log.error(ex.getMessage(), ex);
+//        }
         try {
             prideSupportEmailSender.sendPublishProjectEmail(publishProject, projectAccession, prideSupportEmailSender.getpublishProjectEmailTemplate());
         } catch (Exception ex) {
@@ -228,6 +231,45 @@ public class ProjectController {
             log.error("Failed login to submission-api : " + loginResponse.getStatusCode() + " " + loginResponse.getBody());
         }
     }
+
+//    @RequestMapping(value = "/createsubmissiontickets", method = RequestMethod.GET, produces = {MediaType.APPLICATION_JSON_VALUE})
+//    public ResponseEntity<Object> createsubmissiontickets() throws Exception {
+//        List<String> allAccessions = projectRepoClient.getAllAccessions();
+//        List<String> allPublicAccessions = projectRepoClient.getAllPublicAccessions();
+//        allAccessions.removeAll(allPublicAccessions);
+//        System.out.println(allAccessions);
+//        System.out.println(allAccessions.size());
+//
+//        HttpHeaders headers = new HttpHeaders();
+//        headers.setAccept(Arrays.asList(MediaType.ALL));
+//        headers.setContentType(MediaType.APPLICATION_JSON);
+//        String payload = objectMapper.writeValueAsString(submissionApiConfig.getCredentials());
+//        HttpEntity<MultiValueMap<String, String>> loginRequestEntity = new HttpEntity(payload, headers);
+//        try {
+//            ResponseEntity<String> loginResponse = proxyRestTemplate.postForEntity(submissionApiConfig.getLoginUrl(), loginRequestEntity, String.class);
+//            if (loginResponse.getStatusCode() == HttpStatus.OK) {
+//                String token = loginResponse.getBody();
+//                headers = new HttpHeaders();
+//                headers.setAccept(Arrays.asList(MediaType.ALL));
+//                headers.set("Authorization", "Bearer " + token);
+//                HttpEntity<MultiValueMap<String, String>> publicationRequestEntity = new HttpEntity(headers);
+//
+//                for (String accession : allAccessions) {
+//                    System.out.println(accession);
+//                    String ticketUrl = "http://noah-login-02.ebi.ac.uk:8061/pride/submission-api/ticket/create-new-ticket?" +
+//                            "ticketId=" + accession + "&submittedPath=/nfs/pride/prod/archive/" + accession +
+//                            "&state=SUBMITTED&accession=" + accession;
+//
+//                    ResponseEntity<String> response = proxyRestTemplate.postForEntity(ticketUrl, publicationRequestEntity, String.class);
+//                    System.out.println(response.getStatusCode() + " : " + response.getBody());
+//                }
+//            }
+//        } catch (Exception ex) {
+//            ex.printStackTrace();
+//        }
+//
+//        return new ResponseEntity<>(WsContastants.PUBLISH_PROJECT_OK, HttpStatus.OK);
+//    }
 
    /* @ApiOperation(notes = "To publish private PRIDE Archive Project submitted by another user",
             value = "publish others private project", nickname = "publishOtherPrivateProject", tags = {"projects"})
