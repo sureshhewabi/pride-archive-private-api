@@ -167,12 +167,12 @@ public class ProjectController {
                 .publishJustification(publishProjectRequest.getPublishJustification())
                 .authorized(true).userName(currentUser.getEmail()).build();
 
-//        try {
-//            sendPublicationRequestToSubmissionApi(projectAccession, publishProjectRequest);
-//        } catch (Exception ex) {
-//            log.error("Failed to login or send publication request to submission-api for accession : " + projectAccession);
-//            log.error(ex.getMessage(), ex);
-//        }
+        try {
+            sendPublicationRequestToSubmissionApi(projectAccession, publishProjectRequest);
+        } catch (Exception ex) {
+            log.error("Failed to login or send publication request to submission-api for accession : " + projectAccession);
+            log.error(ex.getMessage(), ex);
+        }
         try {
             prideSupportEmailSender.sendPublishProjectEmail(publishProject, projectAccession, prideSupportEmailSender.getpublishProjectEmailTemplate());
         } catch (Exception ex) {
