@@ -161,11 +161,11 @@ public class ProjectController {
             return new ResponseEntity<>(WsContastants.PX_PROJECT_NOT_FOUND + projectAccession + WsContastants.CONTACT_PRIDE, new HttpHeaders(), HttpStatus.BAD_REQUEST);
         }
 
-        PublishProject publishProject = PublishProject.builder().pubmedId(publishProjectRequest.getPubmedId())
-                .doi(publishProjectRequest.getDoi())
-                .referenceLine(publishProjectRequest.getReferenceLine())
-                .publishJustification(publishProjectRequest.getPublishJustification())
-                .authorized(true).userName(currentUser.getEmail()).build();
+//        PublishProject publishProject = PublishProject.builder().pubmedId(publishProjectRequest.getPubmedId())
+//                .doi(publishProjectRequest.getDoi())
+//                .referenceLine(publishProjectRequest.getReferenceLine())
+//                .publishJustification(publishProjectRequest.getPublishJustification())
+//                .authorized(true).userName(currentUser.getEmail()).build();
 
         try {
             sendPublicationRequestToSubmissionApi(projectAccession, publishProjectRequest);
@@ -173,13 +173,13 @@ public class ProjectController {
             log.error("Failed to login or send publication request to submission-api for accession : " + projectAccession);
             log.error(ex.getMessage(), ex);
         }
-        try {
-            prideSupportEmailSender.sendPublishProjectEmail(publishProject, projectAccession, prideSupportEmailSender.getpublishProjectEmailTemplate());
-        } catch (Exception ex) {
-            String message = "Failed to send publish project email on: " + projectAccession;
-            log.error(message, ex);
-            return new ResponseEntity<>(WsContastants.PUBLISH_PROJECT_NOK, HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+//        try {
+//            prideSupportEmailSender.sendPublishProjectEmail(publishProject, projectAccession, prideSupportEmailSender.getpublishProjectEmailTemplate());
+//        } catch (Exception ex) {
+//            String message = "Failed to send publish project email on: " + projectAccession;
+//            log.error(message, ex);
+//            return new ResponseEntity<>(WsContastants.PUBLISH_PROJECT_NOK, HttpStatus.INTERNAL_SERVER_ERROR);
+//        }
         return new ResponseEntity<>(WsContastants.PUBLISH_PROJECT_OK, HttpStatus.OK);
     }
 
